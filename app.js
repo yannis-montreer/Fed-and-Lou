@@ -289,35 +289,35 @@ $('#search').addEventListener('submit', (e) => {
 
 /* ---------- feuilles (produit, panier) ---------- */
 let sheetEl = null;
+let sheetPushed = false;
 function openSheet(content) {
-  closeSheet(true);
+  closeSheet(true, true);
   const grab = h('div', { class: 'grab' }, h('i'));
   const sheet = h('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'true' }, grab, content);
   const backdrop = h('div', { class: 'backdrop', onclick: () => closeSheet() });
   const wrap = h('div', { class: 'wrap' }, backdrop, sheet);
   $('#layer').append(wrap);
   sheetEl = wrap;
-  enableDrag(wrap, sheet, backdrop, grab);
+  if (!sheetPushed) { history.pushState({ sheet: 1 }, ''); sheetPushed = true; }
+  enableDrag(sheet, backdrop, grab);
   requestAnimationFrame(() => requestAnimationFrame(() => wrap.classList.add('show')));
 }
-/* tirer la pastille vers le bas pour fermer la feuille */
-function enableDrag(wrap, sheet, backdrop, grab) {
-  let y0 = 0, t0 = 0, dy = 0, drag = false, lastY = 0, lastT = 0, v = 0;
-  grab.addEventListener('pointerdown', (e) => {
-    drag = true; y0 = lastY = e.clientY; t0 = lastT = e.timeStamp; dy = 0; v = 0;
-    grab.setPointerCapture(e.pointerId);
+/* tirer la pastille (ou l'image, depuis le haut de la fiche) vers le bas pour fermer */
+function enableDrag(sheet, backdrop, grab) {
+  let y0 = 0, dy = 0, drag = false, lastY = 0, lastT = 0, v = 0;
+  const start = (y, t) => {
+    drag = true; y0 = lastY = y; lastT = t; dy = 0; v = 0;
     sheet.style.transition = 'none';
     backdrop.style.transition = 'none';
-  });
-  grab.addEventListener('pointermove', (e) => {
-    if (!drag) return;
-    dy = Math.max(0, e.clientY - y0);
-    const dt = e.timeStamp - lastT;
-    if (dt > 0) v = (e.clientY - lastY) / dt;
-    lastY = e.clientY; lastT = e.timeStamp;
+  };
+  const move = (y, t) => {
+    dy = Math.max(0, y - y0);
+    const dt = t - lastT;
+    if (dt > 0) v = (y - lastY) / dt;
+    lastY = y; lastT = t;
     sheet.style.transform = 'translateY(' + dy + 'px)';
     backdrop.style.opacity = String(Math.max(0, 1 - dy / sheet.offsetHeight));
-  });
+  };
   const end = () => {
     if (!drag) return;
     drag = false;
@@ -332,29 +332,71 @@ function enableDrag(wrap, sheet, backdrop, grab) {
       backdrop.style.opacity = '';
     }
   };
+  grab.addEventListener('pointerdown', (e) => { grab.setPointerCapture(e.pointerId); start(e.clientY, e.timeStamp); });
+  grab.addEventListener('pointermove', (e) => { if (drag) move(e.clientY, e.timeStamp); });
   grab.addEventListener('pointerup', end);
   grab.addEventListener('pointercancel', end);
+
+  /* depuis l'image : seulement si le geste commence alors que la fiche est tout en haut,
+     donc jamais en prolongement d'un défilement */
+  const area = sheet.querySelector('.gwrap'), body = sheet.querySelector('.sbody');
+  if (!area || !body) return;
+  let armed = false, active = false, tx = 0, ty = 0;
+  area.addEventListener('touchstart', (e) => {
+    armed = e.touches.length === 1 && body.scrollTop <= 0;
+    active = false;
+    tx = e.touches[0].clientX; ty = e.touches[0].clientY;
+  }, { passive: true });
+  area.addEventListener('touchmove', (e) => {
+    if (!armed) return;
+    const t = e.touches[0];
+    if (!active) {
+      const ax = Math.abs(t.clientX - tx), ay = t.clientY - ty;
+      if (Math.max(ax, Math.abs(ay)) < 8) return;
+      if (ay > 0 && ay > ax && body.scrollTop <= 0) { active = true; start(ty, e.timeStamp); }
+      else { armed = false; return; }
+    }
+    e.preventDefault();
+    move(t.clientY, e.timeStamp);
+  }, { passive: false });
+  const fin = () => { if (active) { active = false; end(); } armed = false; };
+  area.addEventListener('touchend', fin);
+  area.addEventListener('touchcancel', fin);
 }
-function closeSheet(now) {
+function closeSheet(now, keepHistory) {
   if (!sheetEl) return;
   const el = sheetEl; sheetEl = null;
   el.classList.remove('show');
   if (now) el.remove(); else setTimeout(() => el.remove(), 280);
+  if (sheetPushed && !keepHistory) { sheetPushed = false; history.back(); }
 }
+/* geste ou bouton retour : ferme la fiche au lieu de quitter l'app */
+window.addEventListener('popstate', () => { if (sheetEl) { sheetPushed = false; closeSheet(); } else sheetPushed = false; });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
 const closeBtn = () => h('button', { class: 'close', 'aria-label': 'Lukk', onclick: () => closeSheet() }, icon(CLOSE, 20, 1.5));
 
 function openProduct(p) {
   let shade = p.shades.length ? p.shades[0] : '';
-  const chips = p.shades.length > 1 ? p.shades.slice(0, 40).map((s, i) => {
-    const b = h('button', { class: 'chip' + (i === 0 ? ' on' : ''), onclick: () => { shade = s; chipBox.querySelectorAll('.chip').forEach((c) => c.classList.toggle('on', c === b)); } }, s);
+  const countOf = (sh) => cart.filter((l) => l.key === p.id + '|' + sh).reduce((n, l) => n + l.qty, 0);
+  const chipEls = [];
+  const chips = p.shades.length > 1 ? p.shades.slice(0, 40).map((sh, i) => {
+    const n = h('span', { class: 'n', hidden: true });
+    const b = h('button', { class: 'chip' + (i === 0 ? ' on' : ''), onclick: () => { shade = sh; showCount(); } }, sh, n);
+    chipEls.push({ b, n, sh });
     return b;
   }) : [];
   const chipBox = h('div', { class: 'chips' }, chips);
   const imgs = p.gallery.length ? p.gallery : (p.img ? [p.img] : []);
-  const countOf = () => cart.filter((l) => l.key.startsWith(p.id + '|')).reduce((n, l) => n + l.qty, 0);
   const cnt = h('span', { class: 'cnt' });
-  const showCount = () => { const n = countOf(); cnt.textContent = n; cnt.hidden = !n; };
+  const showCount = () => {
+    const n = countOf(shade);
+    cnt.textContent = n; cnt.hidden = !n;
+    chipEls.forEach(({ b, n: bn, sh }) => {
+      const on = sh === shade, k = countOf(sh);
+      b.classList.toggle('on', on);
+      bn.textContent = k; bn.hidden = on || !k;
+    });
+  };
   const fx = h('span', { class: 'fx', 'aria-hidden': 'true' }, h('i', { class: 'bar' }), h('i', { class: 'dot' }), h('span', { class: 'bk' }, icon(CARTP, 22, 1.6)));
   const add = h('button', { class: 'cta' }, h('span', { class: 'lbl' }, 'Legg i handlekurv'), cnt, fx);
   showCount();
@@ -420,6 +462,9 @@ function openCart() {
   openSheet([body, foot]);
 }
 $('#cartBtn').addEventListener('click', openCart);
+
+/* ---------- panier flottant : remonte quand l'en-tête a défilé ---------- */
+$('#scroller').addEventListener('scroll', () => { $('#app').classList.toggle('scrolled', $('#scroller').scrollTop > 40); }, { passive: true });
 
 /* ---------- pull to refresh ---------- */
 (function () {
