@@ -221,7 +221,7 @@ function renderTabs() {
 function renderPills() {
   const box = $('#pills');
   if (state.catOv) {
-    box.replaceChildren(h('button', { class: 'pill on', onclick: () => { state.catOv = null; renderPills(); load(); } }, t('cat_pill') + state.catOv.name + '  ✕'));
+    box.replaceChildren(h('button', { class: 'pill on', onclick: () => { state.catOv = null; leaveSearchMode(); renderPills(); load(); } }, t('cat_pill') + state.catOv.name + '  ✕'));
     return;
   }
   if (state.query) {
@@ -439,6 +439,7 @@ function selectTab(key) {
     afterClose = null;
     closeSheet(true);
     leaveFav();
+    if (state.query || state.catOv) { state.query = ''; state.catOv = null; $('#q').value = ''; leaveSearchMode(); state.dirty = true; }
     state.tab = 'mer';
     $('#app').classList.add('mer'); $('#mer').hidden = false;
     renderTabs(); renderMer(); $('#mer').scrollTop = 0;
@@ -447,7 +448,9 @@ function selectTab(key) {
   const fromMer = state.tab === 'mer';
   leaveFav();
   $('#app').classList.remove('mer'); $('#mer').hidden = true;
-  if (fromMer && key === state.prevTab) { state.tab = key; renderTabs(); return; }
+  if (fromMer && key === state.prevTab && !state.dirty) { state.tab = key; renderTabs(); return; }
+  state.dirty = false;
+  leaveSearchMode();
   resetFilters();
   const same = key === state.tab && !state.query;
   state.tab = key; state.sub = null; state.filter = 'all'; state.query = ''; state.catOv = null;
@@ -458,7 +461,7 @@ function selectTab(key) {
   load();
 }
 function clearSearch() {
-  state.query = ''; $('#q').value = '';
+  state.query = ''; $('#q').value = ''; leaveSearchMode();
   renderTabs(); renderPills(); load();
 }
 /* ---------- suggestions au fil de la frappe ---------- */
@@ -477,6 +480,7 @@ const openCategory = (cat) => {
   closeSugg(); $('#q').blur();
   state.query = ''; $('#q').value = ''; state.sub = null; state.filter = 'all'; resetFilters();
   state.catOv = { id: cat.id, name: text(cat.name) };
+  enterSearchMode();
   renderTabs(); renderPills(); renderFilters();
   $('#scroller').scrollTop = 0;
   load();
@@ -533,6 +537,7 @@ $('#search').addEventListener('submit', (e) => {
   $('#q').blur();
   if (!v) { if (state.query) clearSearch(); return; }
   state.query = v; state.sub = null; state.filter = 'all'; state.catOv = null;
+  enterSearchMode();
   renderTabs(); renderPills(); renderFilters();
   $('#scroller').scrollTop = 0;
   load();
@@ -540,7 +545,7 @@ $('#search').addEventListener('submit', (e) => {
 
 /* ---------- feuilles (produit, panier) ---------- */
 let sheetEl = null;
-let sheetPushed = false, skipPop = 0, merPage = null, afterClose = null, pendingAfterPop = null;
+let sheetPushed = false, skipPop = 0, merPage = null, afterClose = null, pendingAfterPop = null, searchPushed = false;
 function openSheet(content, cls) {
   closeSheet(true, true);
   const grab = h('div', { class: 'grab' }, h('i'));
@@ -635,9 +640,19 @@ window.addEventListener('popstate', () => {
     return;
   }
   if (sheetEl) { sheetPushed = false; closeSheet(); return; }
+  if (searchPushed && state.tab !== 'mer') { searchPushed = false; exitSearch(); return; }
   sheetPushed = false;
   if (merPage) { merPage = null; if (state.tab === 'mer') { renderMer(); $('#mer').scrollTop = 0; } }
 });
+/* recherche / catégorie ouverte depuis la recherche : le geste retour la ferme au lieu de quitter l'app */
+function enterSearchMode() { if (!searchPushed) { history.pushState({ search: 1 }, ''); searchPushed = true; } }
+function leaveSearchMode() { if (searchPushed) { searchPushed = false; skipPop++; history.back(); } }
+function exitSearch() {
+  state.query = ''; state.catOv = null; $('#q').value = ''; closeSugg();
+  renderTabs(); renderPills(); renderFilters();
+  $('#scroller').scrollTop = 0;
+  load();
+}
 function leaveFav() { if (merPage) { merPage = null; skipPop++; history.back(); } }
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
 const closeBtn = () => h('button', { class: 'close', 'aria-label': t('close'), onclick: () => closeSheet() }, icon(CLOSE, 20, 1.5));
