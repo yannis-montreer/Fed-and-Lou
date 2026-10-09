@@ -16,7 +16,7 @@ const TABS = [
   { key: 'mer', label: 'Mer', icon: 'M5 12a1.2 1.2 0 1 0 .01 0 M12 12a1.2 1.2 0 1 0 .01 0 M19 12a1.2 1.2 0 1 0 .01 0' }
 ];
 const VERSION = 'Demo 1.1';
-const BUILD = 'b34';
+const BUILD = 'b35';
 const SORTS = { date: ['date', 'desc', 'sort_new'], popularity: ['popularity', 'desc', 'sort_pop'], price_asc: ['price', 'asc', 'sort_plow'], price_desc: ['price', 'desc', 'sort_phigh'] };
 const MERKE_ATTR = 4; // attribut « Merke » (marque) de la boutique
 const FILTERS = [['all', 'all'], ['new', 'f_new'], ['sale', 'f_sale']];
@@ -528,6 +528,13 @@ $('#q').addEventListener('input', () => {
   if (v.length < 2) { closeSugg(); return; }
   suggTimer = setTimeout(() => showSugg(v), 140);
 });
+/* le champ de recherche a sa propre étape d'historique dès qu'on le touche : le retour ferme la saisie et efface le texte */
+$('#q').addEventListener('focus', () => { enterSearchMode(); });
+$('#q').addEventListener('blur', () => {
+  setTimeout(() => {
+    if (searchPushed && !$('#q').value.trim() && !state.query && !state.catOv && document.activeElement !== $('#q')) leaveSearchMode();
+  }, 150);
+});
 document.addEventListener('pointerdown', (e) => { if (!$('#sugg').hidden && !e.target.closest('#sugg') && !e.target.closest('#search')) closeSugg(); });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSugg(); });
 
@@ -649,7 +656,7 @@ window.addEventListener('popstate', () => {
 function enterSearchMode() { if (!searchPushed) { history.pushState({ search: 1 }, ''); searchPushed = true; } }
 function leaveSearchMode() { if (searchPushed) { searchPushed = false; skipPop++; history.back(); } }
 function exitSearch() {
-  state.query = ''; state.catOv = null; $('#q').value = ''; closeSugg();
+  state.query = ''; state.catOv = null; $('#q').value = ''; closeSugg(); $('#q').blur();
   renderTabs(); renderPills(); renderFilters();
   $('#scroller').scrollTop = 0;
   load();
