@@ -321,3 +321,4 @@ nav button.on span{font-weight:600}
 .codone h3{margin:0 0 6px;font-family:'Cormorant Garamond',serif;font-weight:600;font-size:28px}
 .codone p{margin:0;font-size:14px;color:var(--mute)}
 .actions.col .cta,.actions.col .ghost{flex:none;width:100%;height:52px}
+.opt .vlogo{display:block;height:20px;width:auto}

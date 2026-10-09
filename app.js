@@ -16,7 +16,7 @@ const TABS = [
   { key: 'mer', label: 'Mer', icon: 'M5 12a1.2 1.2 0 1 0 .01 0 M12 12a1.2 1.2 0 1 0 .01 0 M19 12a1.2 1.2 0 1 0 .01 0' }
 ];
 const VERSION = 'Demo 1.1';
-const BUILD = 'b39';
+const BUILD = 'b40';
 const SORTS = { date: ['date', 'desc', 'sort_new'], popularity: ['popularity', 'desc', 'sort_pop'], price_asc: ['price', 'asc', 'sort_plow'], price_desc: ['price', 'desc', 'sort_phigh'] };
 const MERKE_ATTR = 4; // attribut « Merke » (marque) de la boutique
 const FILTERS = [['all', 'all'], ['new', 'f_new'], ['sale', 'f_sale']];
@@ -72,7 +72,7 @@ const I18N = {
         ['', 'Demoen er kun til visning. Handlekurven er lokal og brukes bare for å vise hvordan den kan fungere: ingen bestilling, ingen betaling og ingen kundedata. Kassen er en simulering: ingen kortopplysninger eller personopplysninger samles inn, og koden «DEMO10» og gavekortet «GAVE100» finnes bare i demoen.'],
         ['Kjøp', '«Fullfør på fredrikoglouisa.no» sender deg til den ordinære nettbutikken. Der skjer kjøpet på butikkens egne vilkår.'],
         ['Priser og lager', 'Priser, tilbud og lagerstatus hentes fra nettbutikken, men kan avvike fra det som gjelder der. Det som står på fredrikoglouisa.no er gjeldende.'],
-        ['Varemerker', 'Varemerker, produktnavn, bilder og tekster tilhører sine respektive eiere.']]]
+        ['Varemerker', 'Varemerker, produktnavn, bilder og tekster tilhører sine respektive eiere. Vipps-logoen tilhører Vipps AS og vises bare for å illustrere betalingsvalget i demoen.']]]
     ]
   },
   en: {
@@ -114,7 +114,7 @@ const I18N = {
         ['', 'The demo is for display only. The cart is local and only shows how it could work: no ordering, no payment and no customer data. The checkout is a simulation: no card details or personal data are collected, and the code "DEMO10" and the gift card "GAVE100" exist only in the demo.'],
         ['Purchases', '"Complete at fredrikoglouisa.no" takes you to the regular online store. Purchases there are made under the store\'s own terms.'],
         ['Prices and stock', 'Prices, offers and stock status are fetched from the online store but may differ from what applies there. What is shown on fredrikoglouisa.no is binding.'],
-        ['Trademarks', 'Trademarks, product names, images and texts belong to their respective owners.']]]
+        ['Trademarks', 'Trademarks, product names, images and texts belong to their respective owners. The Vipps logo belongs to Vipps AS and is shown only to illustrate the payment choice in the demo.']]]
     ]
   }
 };
@@ -1217,7 +1217,7 @@ function coStep2(body, foot) {
       coOpt(coDemo.ship === 'store', t('co_store'), t('co_store_sub'), t('co_free'), () => { coDemo.ship = 'store'; coRender(); }),
       coOpt(coDemo.ship === 'std', t('co_std'), t('co_std_sub'), tt.sub - tt.disc >= 1000 ? t('co_free') : kr(59), () => { coDemo.ship = 'std'; coRender(); })),
     h('div', { class: 'cosec' }, h('h3', {}, t('co_payment')),
-      coOpt(coDemo.pay === 'vipps', 'Vipps', '', '', () => { coDemo.pay = 'vipps'; coRender(); }),
+      coOpt(coDemo.pay === 'vipps', h('img', { class: 'vlogo', src: 'vipps-logo.png', alt: 'Vipps' }), '', '', () => { coDemo.pay = 'vipps'; coRender(); }),
       coOpt(coDemo.pay === 'card', t('co_card'), '', '', () => { coDemo.pay = 'card'; coRender(); })),
     h('div', { class: 'cosec' }, h('h3', {}, t('co_summary')), coTotalsBox(tt, true)));
   foot.replaceChildren(h('div', { class: 'actions col' },
