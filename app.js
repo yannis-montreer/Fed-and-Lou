@@ -37,7 +37,7 @@ const I18N = {
     shades: 'nyanser', variants: 'varianter', shade: 'Nyanse', variant: 'Variant',
     retry: 'Prøv igjen', none: 'Ingen produkter funnet', err_more: 'Kunne ikke hente flere produkter.',
     offline: 'Viser lagrede produkter. Ingen kontakt med fredrikoglouisa.no.', err: 'Kunne ikke hente produkter.',
-    close: 'Lukk', add: 'Legg i handlekurv', see_site: 'Se på fredrikoglouisa.no', cart: 'Handlekurv', cart_empty: 'Handlekurven er tom.',
+    prev_img: 'Forrige bilde', next_img: 'Neste bilde', close: 'Lukk', add: 'Legg i handlekurv', see_site: 'Se på fredrikoglouisa.no', cart: 'Handlekurv', cart_empty: 'Handlekurven er tom.',
     fewer: 'Færre', more: 'Flere', sum: 'Sum', cart_note: 'Demo: handlekurven lagres bare på denne enheten. Betalingen gjøres hos fredrikoglouisa.no.',
     checkout: 'Fullfør på fredrikoglouisa.no', ptr_go: 'Slipp for å oppdatere', ptr: 'Dra for å oppdatere', fav_save: 'Lagre i favoritter',
     mer: 'Mer', favorites: 'Favoritter', fav_count: (n) => n + (n === 1 ? ' produkt' : ' produkter'), fav_empty: 'Ingen favoritter ennå',
@@ -67,7 +67,7 @@ const I18N = {
     shades: 'shades', variants: 'variants', shade: 'Shade', variant: 'Variant',
     retry: 'Try again', none: 'No products found', err_more: "Couldn't load more products.",
     offline: 'Showing saved products. No connection to fredrikoglouisa.no.', err: "Couldn't load products.",
-    close: 'Close', add: 'Add to cart', see_site: 'View on fredrikoglouisa.no', cart: 'Cart', cart_empty: 'Your cart is empty.',
+    prev_img: 'Previous image', next_img: 'Next image', close: 'Close', add: 'Add to cart', see_site: 'View on fredrikoglouisa.no', cart: 'Cart', cart_empty: 'Your cart is empty.',
     fewer: 'Fewer', more: 'More', sum: 'Total', cart_note: 'Demo: the cart is only stored on this device. Payment is made at fredrikoglouisa.no.',
     checkout: 'Complete at fredrikoglouisa.no', ptr_go: 'Release to refresh', ptr: 'Pull to refresh', fav_save: 'Save to favorites',
     mer: 'More', favorites: 'Favorites', fav_count: (n) => n + (n === 1 ? ' product' : ' products'), fav_empty: 'No favorites yet',
@@ -158,7 +158,9 @@ function mapProduct(p) {
   const regular = Number(pr.regular_price) / div;
   const range = pr.price_range;
   const attr = (p.attributes || [])[0];
-  const shades = attr && attr.terms ? attr.terms.map((t) => text(t.name)) : [];
+  const rawShades = attr && attr.terms ? attr.terms.map((t) => text(t.name)) : [];
+  const cleaned = rawShades.map((n) => n.replace(/^\d{1,3}\s+(?=\S)/, ''));
+  const shades = cleaned.map((n, i) => (cleaned.filter((x) => x === n).length > 1 ? rawShades[i] : n));
   const slugs = attr && attr.terms ? attr.terms.map((t) => t.slug) : [];
   const imgs = (p.images || []);
   return {
@@ -170,7 +172,7 @@ function mapProduct(p) {
     onSale: !!p.on_sale && regular > price,
     from: range && range.min_amount && Number(range.min_amount) / div < Number(range.max_amount) / div ? Number(range.min_amount) / div : null,
     img: imgs[0] ? (imgs[0].thumbnail || imgs[0].src) : '',
-    gallery: imgs.slice(0, 5).map((i) => i.src),
+    gallery: imgs.slice(0, 10).map((i) => i.src),
     url: p.permalink,
     desc: text(p.short_description).slice(0, 360),
     paras: paras(p.description).slice(0, 8),
@@ -549,9 +551,18 @@ function openProduct(p) {
     setTimeout(() => {
       gal.replaceChildren(...list.map((src) => h('img', { src, alt: p.name, onerror: (e) => e.target.remove() })));
       gal.scrollLeft = 0;
+      updArrows();
       requestAnimationFrame(() => gal.classList.remove('swap'));
     }, 130);
   };
+  const prev = h('button', { class: 'gnav l', 'aria-label': t('prev_img'), hidden: true, onclick: () => gal.scrollBy({ left: -gal.clientWidth, behavior: 'smooth' }) }, icon('M15 6l-6 6 6 6', 20, 1.6));
+  const next = h('button', { class: 'gnav r', 'aria-label': t('next_img'), hidden: true, onclick: () => gal.scrollBy({ left: gal.clientWidth, behavior: 'smooth' }) }, icon('M9 6l6 6-6 6', 20, 1.6));
+  const updArrows = () => {
+    const max = gal.scrollWidth - gal.clientWidth;
+    prev.hidden = gal.scrollLeft < 4;
+    next.hidden = max < 4 || gal.scrollLeft > max - 4;
+  };
+  gal.addEventListener('scroll', updArrows, { passive: true });
   const cnt = h('span', { class: 'cnt' });
   const showCount = () => {
     const n = countOf(shade);
@@ -576,13 +587,14 @@ function openProduct(p) {
   });
   openSheet([
     h('div', { class: 'sbody' },
-      h('div', { class: 'gwrap' }, gal),
+      h('div', { class: 'gwrap' }, gal, prev, next),
       h('div', { class: 'info' }, h('div', { class: 'brand' }, p.brand), h('h1', { class: 'title' }, p.name), priceEl(p)),
       chips.length ? h('div', { class: 'info' }, h('div', { class: 'lbl' }, p.shadeLabel === 'nyanser' ? t('shade') : t('variant')), chipBox) : null,
       p.paras && p.paras.length ? h('div', { class: 'desc' }, p.paras.map((t) => h('p', null, t))) : (p.desc ? h('div', { class: 'desc' }, p.desc) : null),
       h('a', { class: 'site', href: p.url, target: '_blank', rel: 'noopener' }, t('see_site'))),
     h('div', { class: 'actions' }, add, heartBtn(p, 'sq'))
   ]);
+  requestAnimationFrame(() => requestAnimationFrame(updArrows));
   if (p.vars && p.vars.length) {
     loadVariants(p).then((v) => {
       variants = v;
