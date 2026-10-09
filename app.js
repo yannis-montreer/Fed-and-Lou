@@ -42,7 +42,7 @@ const I18N = {
     filter: 'Filter', sort: 'Sorter', brands: 'Merker', price: 'Pris', price_from: 'Fra kr', price_to: 'Til kr', instock_only: 'Kun på lager', reset: 'Nullstill', show_results: 'Vis resultater',
     sort_new: 'Nyeste', sort_pop: 'Populære', sort_plow: 'Pris: lav til høy', sort_phigh: 'Pris: høy til lav', brand_search: 'Søk etter merke', filter_err: 'Kunne ikke hente filtre.',
     pop_title: 'Populære produkter', all_title: 'Alle produkter',
-    remove: 'Fjern', sugg_all: (q) => 'Se alle resultater for «' + q + '»', no_match: 'Ingen treff', oos: 'Utsolgt', prev_img: 'Forrige bilde', next_img: 'Neste bilde', close: 'Lukk', add: 'Legg i handlekurv', see_site: 'Se på fredrikoglouisa.no', cart: 'Handlekurv', cart_empty: 'Handlekurven er tom.',
+    remove: 'Fjern', sugg_all: (q) => 'Se alle resultater for «' + q + '»', no_match: 'Ingen treff', sugg_h: 'Søkeforslag', cat_h: 'Kategorier', prod_h: 'Produkter', cat_pill: 'Kategori: ', oos: 'Utsolgt', prev_img: 'Forrige bilde', next_img: 'Neste bilde', close: 'Lukk', add: 'Legg i handlekurv', see_site: 'Se på fredrikoglouisa.no', cart: 'Handlekurv', cart_empty: 'Handlekurven er tom.',
     fewer: 'Færre', more: 'Flere', sum: 'Sum', cart_note: 'Demo: handlekurven lagres bare på denne enheten. Betalingen gjøres hos fredrikoglouisa.no.',
     checkout: 'Fullfør på fredrikoglouisa.no', ptr_go: 'Slipp for å oppdatere', ptr: 'Dra for å oppdatere', fav_save: 'Lagre i favoritter',
     mer: 'Mer', favorites: 'Favoritter', fav_count: (n) => n + (n === 1 ? ' produkt' : ' produkter'), fav_empty: 'Ingen favoritter ennå',
@@ -75,7 +75,7 @@ const I18N = {
     filter: 'Filter', sort: 'Sort', brands: 'Brands', price: 'Price', price_from: 'From kr', price_to: 'To kr', instock_only: 'In stock only', reset: 'Reset', show_results: 'Show results',
     sort_new: 'Newest', sort_pop: 'Most popular', sort_plow: 'Price: low to high', sort_phigh: 'Price: high to low', brand_search: 'Search brand', filter_err: "Couldn't load filters.",
     pop_title: 'Popular products', all_title: 'All products',
-    remove: 'Remove', sugg_all: (q) => 'See all results for “' + q + '”', no_match: 'No matches', oos: 'Out of stock', prev_img: 'Previous image', next_img: 'Next image', close: 'Close', add: 'Add to cart', see_site: 'View on fredrikoglouisa.no', cart: 'Cart', cart_empty: 'Your cart is empty.',
+    remove: 'Remove', sugg_all: (q) => 'See all results for “' + q + '”', no_match: 'No matches', sugg_h: 'Suggestions', cat_h: 'Categories', prod_h: 'Products', cat_pill: 'Category: ', oos: 'Out of stock', prev_img: 'Previous image', next_img: 'Next image', close: 'Close', add: 'Add to cart', see_site: 'View on fredrikoglouisa.no', cart: 'Cart', cart_empty: 'Your cart is empty.',
     fewer: 'Fewer', more: 'More', sum: 'Total', cart_note: 'Demo: the cart is only stored on this device. Payment is made at fredrikoglouisa.no.',
     checkout: 'Complete at fredrikoglouisa.no', ptr_go: 'Release to refresh', ptr: 'Pull to refresh', fav_save: 'Save to favorites',
     mer: 'More', favorites: 'Favorites', fav_count: (n) => n + (n === 1 ? ' product' : ' products'), fav_empty: 'No favorites yet',
@@ -204,6 +204,7 @@ function mapProduct(p) {
 /* ---------- état ---------- */
 const state = {
   sort: store.get('sort', 'date'), fBrands: [], fStock: false, fMin: null, fMax: null,
+  catOv: null,
   tab: TABS[0].key, cats: {}, subs: [], sub: null, filter: 'all', query: '',
   items: [], page: 1, done: false, loading: false, token: 0
 };
@@ -219,6 +220,10 @@ function renderTabs() {
 }
 function renderPills() {
   const box = $('#pills');
+  if (state.catOv) {
+    box.replaceChildren(h('button', { class: 'pill on', onclick: () => { state.catOv = null; renderPills(); load(); } }, t('cat_pill') + state.catOv.name + '  ✕'));
+    return;
+  }
   if (state.query) {
     box.replaceChildren(h('button', { class: 'pill on', onclick: clearSearch }, t('search_pill') + state.query + '  ✕'));
     return;
@@ -376,7 +381,7 @@ async function load(opts) {
     if (!append) updPop(null);
     key = 'q.s.' + state.query.toLowerCase();
   } else {
-    const cat = state.sub || catId();
+    const cat = state.catOv ? state.catOv.id : (state.sub || catId());
     if (!cat) { state.loading = false; showError(); return; }
     params.category = cat;
     if (!append) updPop(cat);
@@ -445,7 +450,7 @@ function selectTab(key) {
   if (fromMer && key === state.prevTab) { state.tab = key; renderTabs(); return; }
   resetFilters();
   const same = key === state.tab && !state.query;
-  state.tab = key; state.sub = null; state.filter = 'all'; state.query = '';
+  state.tab = key; state.sub = null; state.filter = 'all'; state.query = ''; state.catOv = null;
   $('#q').value = '';
   renderTabs(); renderFilters(); renderPills();
   $('#scroller').scrollTop = 0;
@@ -458,7 +463,7 @@ function clearSearch() {
 }
 /* ---------- suggestions au fil de la frappe ---------- */
 let suggTok = 0, suggTimer = 0;
-const closeSugg = () => { suggTok++; clearTimeout(suggTimer); const b = $('#sugg'); b.hidden = true; b.replaceChildren(); };
+const closeSugg = () => { suggTok++; clearTimeout(suggTimer); const b = $('#sugg'); b.hidden = true; b.replaceChildren(); document.body.classList.remove('suggOpen'); };
 const submitSearch = () => { if ($('#search').requestSubmit) $('#search').requestSubmit(); else $('#search').dispatchEvent(new Event('submit', { cancelable: true })); };
 async function openFromSuggestion(it) {
   closeSugg(); $('#q').blur();
@@ -467,25 +472,50 @@ async function openFromSuggestion(it) {
     openProduct(mapProduct(data));
   } catch (e) { $('#q').value = text(it.name); submitSearch(); }
 }
+const searchFor = (term) => { closeSugg(); $('#q').value = term; submitSearch(); };
+const openCategory = (cat) => {
+  closeSugg(); $('#q').blur();
+  state.query = ''; $('#q').value = ''; state.sub = null; state.filter = 'all'; resetFilters();
+  state.catOv = { id: cat.id, name: text(cat.name) };
+  renderTabs(); renderPills(); renderFilters();
+  $('#scroller').scrollTop = 0;
+  load();
+};
 async function showSugg(v) {
   const tok = ++suggTok;
-  try {
-    const r = await clerk('/search/predictive', { query: v, limit: 7, attributes: JSON.stringify(['id', 'name', 'brand', 'price', 'list_price', 'image']) });
-    if (tok !== suggTok || $('#q').value.trim() !== v) return;
-    const items = r.product_data || [];
-    const box = $('#sugg');
-    if (!items.length) box.replaceChildren(h('div', { class: 'snone' }, t('no_match')));
-    else box.replaceChildren(
-      ...items.map((it) => h('button', { class: 'srow', type: 'button', onclick: () => openFromSuggestion(it) },
-        it.image ? h('img', { src: it.image, alt: '', onerror: (e) => e.target.remove() }) : null,
-        h('span', { class: 'si' },
-          h('span', { class: 'sb' }, text(it.brand || '')),
-          h('span', { class: 'sn' }, text(it.name)),
-          h('span', { class: 'sp' }, kr(it.price), it.list_price > it.price ? h('s', {}, kr(it.list_price)) : null)))),
-      h('button', { class: 'srow all', type: 'button', onclick: () => { closeSugg(); submitSearch(); } },
-        h('span', {}, t('sugg_all', v)), icon(CHEV, 18, 1.5)));
-    box.hidden = false;
-  } catch (e) { if (tok === suggTok) closeSugg(); }
+  const [pr, su, ca] = await Promise.allSettled([
+    clerk('/search/predictive', { query: v, limit: 20, attributes: JSON.stringify(['id', 'name', 'brand', 'price', 'list_price', 'image']) }),
+    clerk('/search/suggestions', { query: v, limit: 4 }),
+    clerk('/search/categories', { query: v, limit: 4 })
+  ]);
+  if (tok !== suggTok || $('#q').value.trim() !== v) return;
+  if (pr.status === 'rejected' && su.status === 'rejected') { closeSugg(); return; }
+  const items = pr.status === 'fulfilled' ? (pr.value.product_data || []) : [];
+  const words = su.status === 'fulfilled' ? (su.value.result || []).filter((w) => w.toLowerCase() !== v.toLowerCase()).slice(0, 3) : [];
+  const cats = ca.status === 'fulfilled' ? (ca.value.categories || []).slice(0, 4) : [];
+  const brands = [...new Set(items.map((x) => x.brand).filter(Boolean))].slice(0, 4);
+  const box = $('#sugg');
+  const label = (k) => h('div', { class: 'sh' }, t(k));
+  const hl = (w) => (w.toLowerCase().startsWith(v.toLowerCase()) ? [h('b', {}, w.slice(0, v.length)), w.slice(v.length)] : [w]);
+  const parts = [];
+  if (words.length) parts.push(label('sugg_h'), ...words.map((w) => h('button', { class: 'sg', type: 'button', onclick: () => searchFor(w) }, icon('M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14z M20 20l-4-4', 16, 1.5), h('span', {}, hl(w)))));
+  if (cats.length) parts.push(label('cat_h'), h('div', { class: 'cr' }, cats.map((cg) => h('button', { class: 'cchip', type: 'button', onclick: () => openCategory(cg) }, text(cg.name)))));
+  if (brands.length) parts.push(label('brands'), h('div', { class: 'cr' }, brands.map((bn) => h('button', { class: 'cchip', type: 'button', onclick: () => searchFor(text(bn)) }, text(bn)))));
+  if (items.length) {
+    parts.push(label('prod_h'));
+    parts.push(...items.slice(0, 6).map((it) => h('button', { class: 'srow', type: 'button', onclick: () => openFromSuggestion(it) },
+      it.image ? h('img', { src: it.image, alt: '', onerror: (e) => e.target.remove() }) : null,
+      h('span', { class: 'si' },
+        h('span', { class: 'sb' }, text(it.brand || '')),
+        h('span', { class: 'sn' }, text(it.name)),
+        h('span', { class: 'sp' }, kr(it.price), it.list_price > it.price ? h('s', {}, kr(it.list_price)) : null)))));
+    parts.push(h('button', { class: 'srow all', type: 'button', onclick: () => { closeSugg(); submitSearch(); } }, h('span', {}, t('sugg_all', v)), icon(CHEV, 18, 1.5)));
+  }
+  if (!parts.length) parts.push(h('div', { class: 'snone' }, t('no_match')));
+  box.replaceChildren(...parts);
+  box.scrollTop = 0;
+  box.hidden = false;
+  document.body.classList.add('suggOpen');
 }
 $('#q').addEventListener('input', () => {
   clearTimeout(suggTimer);
@@ -502,7 +532,7 @@ $('#search').addEventListener('submit', (e) => {
   const v = $('#q').value.trim();
   $('#q').blur();
   if (!v) { if (state.query) clearSearch(); return; }
-  state.query = v; state.sub = null; state.filter = 'all';
+  state.query = v; state.sub = null; state.filter = 'all'; state.catOv = null;
   renderTabs(); renderPills(); renderFilters();
   $('#scroller').scrollTop = 0;
   load();

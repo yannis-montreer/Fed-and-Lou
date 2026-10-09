@@ -259,3 +259,14 @@ nav button.on span{font-weight:600}
 .srow.all{justify-content:space-between;min-height:50px;font-size:14px;font-weight:500;border-bottom:0}
 .srow.all svg{stroke:var(--mute);flex:none}
 .sugg .snone{padding:20px 16px;color:var(--mute);font-size:14px}
+
+/* suggestions : sections */
+.sugg .sh{padding:12px 16px 4px;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+.sugg .sg{display:flex;align-items:center;gap:12px;width:100%;min-height:42px;padding:0 16px;border:0;background:#fff;font-size:15px;text-align:left}
+.sugg .sg svg{flex:none;stroke:var(--mute)}
+.sugg .sg b{font-weight:600}
+.sugg .cr{display:flex;gap:8px;overflow-x:auto;padding:4px 16px 10px;scrollbar-width:none}
+.sugg .cr::-webkit-scrollbar{display:none}
+.sugg .cchip{flex:none;height:34px;padding:0 14px;border-radius:17px;border:1px solid var(--line2);background:#fff;font-size:13px;white-space:nowrap}
+.sugg .sh + .srow{border-top:1px solid var(--line)}
+.suggOpen #fab{display:none}
