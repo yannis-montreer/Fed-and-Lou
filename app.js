@@ -16,6 +16,8 @@ const TABS = [
   { key: 'mer', label: 'Mer', icon: 'M5 12a1.2 1.2 0 1 0 .01 0 M12 12a1.2 1.2 0 1 0 .01 0 M19 12a1.2 1.2 0 1 0 .01 0' }
 ];
 const VERSION = 'Demo 1.1';
+const SORTS = { date: ['date', 'desc', 'sort_new'], popularity: ['popularity', 'desc', 'sort_pop'], price_asc: ['price', 'asc', 'sort_plow'], price_desc: ['price', 'desc', 'sort_phigh'] };
+const MERKE_ATTR = 4; // attribut « Merke » (marque) de la boutique
 const FILTERS = [['all', 'all'], ['new', 'f_new'], ['sale', 'f_sale']];
 const HEART = 'M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z';
 const CLOSE = 'M6 6l12 12 M18 6L6 18';
@@ -37,6 +39,8 @@ const I18N = {
     shades: 'nyanser', variants: 'varianter', shade: 'Nyanse', variant: 'Variant',
     retry: 'Prøv igjen', none: 'Ingen produkter funnet', err_more: 'Kunne ikke hente flere produkter.',
     offline: 'Viser lagrede produkter. Ingen kontakt med fredrikoglouisa.no.', err: 'Kunne ikke hente produkter.',
+    filter: 'Filter', sort: 'Sorter', brands: 'Merker', price: 'Pris', price_from: 'Fra kr', price_to: 'Til kr', instock_only: 'Kun på lager', reset: 'Nullstill', show_results: 'Vis resultater',
+    sort_new: 'Nyeste', sort_pop: 'Populære', sort_plow: 'Pris: lav til høy', sort_phigh: 'Pris: høy til lav', brand_search: 'Søk etter merke', filter_err: 'Kunne ikke hente filtre.',
     oos: 'Utsolgt', prev_img: 'Forrige bilde', next_img: 'Neste bilde', close: 'Lukk', add: 'Legg i handlekurv', see_site: 'Se på fredrikoglouisa.no', cart: 'Handlekurv', cart_empty: 'Handlekurven er tom.',
     fewer: 'Færre', more: 'Flere', sum: 'Sum', cart_note: 'Demo: handlekurven lagres bare på denne enheten. Betalingen gjøres hos fredrikoglouisa.no.',
     checkout: 'Fullfør på fredrikoglouisa.no', ptr_go: 'Slipp for å oppdatere', ptr: 'Dra for å oppdatere', fav_save: 'Lagre i favoritter',
@@ -67,6 +71,8 @@ const I18N = {
     shades: 'shades', variants: 'variants', shade: 'Shade', variant: 'Variant',
     retry: 'Try again', none: 'No products found', err_more: "Couldn't load more products.",
     offline: 'Showing saved products. No connection to fredrikoglouisa.no.', err: "Couldn't load products.",
+    filter: 'Filter', sort: 'Sort', brands: 'Brands', price: 'Price', price_from: 'From kr', price_to: 'To kr', instock_only: 'In stock only', reset: 'Reset', show_results: 'Show results',
+    sort_new: 'Newest', sort_pop: 'Most popular', sort_plow: 'Price: low to high', sort_phigh: 'Price: high to low', brand_search: 'Search brand', filter_err: "Couldn't load filters.",
     oos: 'Out of stock', prev_img: 'Previous image', next_img: 'Next image', close: 'Close', add: 'Add to cart', see_site: 'View on fredrikoglouisa.no', cart: 'Cart', cart_empty: 'Your cart is empty.',
     fewer: 'Fewer', more: 'More', sum: 'Total', cart_note: 'Demo: the cart is only stored on this device. Payment is made at fredrikoglouisa.no.',
     checkout: 'Complete at fredrikoglouisa.no', ptr_go: 'Release to refresh', ptr: 'Pull to refresh', fav_save: 'Save to favorites',
@@ -140,7 +146,7 @@ const kr = (n) => fmt.format(Math.round(n)).replace(/[  ]/g, ' ') + ' kr';
 /* ---------- API ---------- */
 async function api(path, params) {
   const u = new URL(API + path);
-  for (const [k, v] of Object.entries(params || {})) u.searchParams.set(k, v);
+  for (const [k, v] of Object.entries(params || {})) { if (Array.isArray(v)) v.forEach((x) => u.searchParams.append(k, x)); else u.searchParams.set(k, v); }
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), 15000);
   try {
@@ -189,6 +195,7 @@ function mapProduct(p) {
 
 /* ---------- état ---------- */
 const state = {
+  sort: store.get('sort', 'date'), fBrands: [], fStock: false, fMin: null, fMax: null,
   tab: TABS[0].key, cats: {}, subs: [], sub: null, filter: 'all', query: '',
   items: [], page: 1, done: false, loading: false, token: 0
 };
@@ -198,6 +205,7 @@ const isFav = (id) => !!favs[id];
 
 /* ---------- rendu : tabs, pills, filtres ---------- */
 function renderTabs() {
+  updFab();
   const nav = $('#tabs');
   nav.replaceChildren(...TABS.map((tb) => h('button', { class: tb.key === state.tab && !state.query ? 'on' : '', 'aria-label': t('tab_' + tb.key), onclick: () => selectTab(tb.key) }, icon(tb.icon, 24), h('span', {}, t('tab_' + tb.key)))));
 }
@@ -208,7 +216,7 @@ function renderPills() {
     return;
   }
   const all = [{ id: null, name: t('all') }, ...state.subs];
-  box.replaceChildren(...all.map((s) => h('button', { class: 'pill' + (state.sub === s.id ? ' on' : ''), onclick: () => { state.sub = s.id; renderPills(); load(); } }, s.name)));
+  box.replaceChildren(...all.map((s) => h('button', { class: 'pill' + (state.sub === s.id ? ' on' : ''), onclick: () => { state.sub = s.id; resetFilters(); renderPills(); load(); } }, s.name)));
 }
 function renderFilters() {
   $('#filters').replaceChildren(...FILTERS.map(([k, lk]) => h('button', { class: state.filter === k ? 'on' : '', onclick: () => { state.filter = k; renderFilters(); load(); } }, t(lk))));
@@ -312,17 +320,27 @@ async function load(opts) {
     const cat = state.sub || catId();
     if (!cat) { state.loading = false; showError(); return; }
     params.category = cat;
-    params.orderby = 'date';
-    params.order = 'desc';
+    const so = SORTS[state.sort] || SORTS.date;
+    params.orderby = so[0];
+    params.order = so[1];
+    params.min_price = state.fMin ? Math.max(1, Math.round(state.fMin * 100)) : 1; // 1 = on écarte les prix à 0
+    if (state.fMax) params.max_price = Math.round(state.fMax * 100);
+    if (state.fStock) params['stock_status[]'] = 'instock';
+    if (state.fBrands.length) {
+      params['attributes[0][attribute]'] = 'pa_merke';
+      params['attributes[0][term_id][]'] = state.fBrands;
+      params['attributes[0][operator]'] = 'in';
+    }
     if (state.filter === 'new') params.tag = NEW_TAG;
     if (state.filter === 'sale') params.on_sale = 'true';
     key = 'q.' + cat + '.' + state.filter;
+    if (fsig()) key += '.' + fsig();
   }
   try {
     const { data, pages } = await api('/products', params);
     if (my !== state.token) return;
     const items = data.map(mapProduct).filter((p) => p.price > 0 && p.img);
-    if (!append) { $('#grid').replaceChildren(); store.set(key, items); }
+    if (!append) { $('#grid').replaceChildren(); if (!fsig()) store.set(key, items); }
     state.items.push(...items);
     state.done = pages ? state.page >= pages : items.length < PER_PAGE;
     state.page++;
@@ -364,6 +382,7 @@ function selectTab(key) {
   leaveFav();
   $('#app').classList.remove('mer'); $('#mer').hidden = true;
   if (fromMer && key === state.prevTab) { state.tab = key; renderTabs(); return; }
+  resetFilters();
   const same = key === state.tab && !state.query;
   state.tab = key; state.sub = null; state.filter = 'all'; state.query = '';
   $('#q').value = '';
@@ -390,10 +409,10 @@ $('#search').addEventListener('submit', (e) => {
 /* ---------- feuilles (produit, panier) ---------- */
 let sheetEl = null;
 let sheetPushed = false, skipPop = 0, merPage = null;
-function openSheet(content) {
+function openSheet(content, cls) {
   closeSheet(true, true);
   const grab = h('div', { class: 'grab' }, h('i'));
-  const sheet = h('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'true' }, grab, content);
+  const sheet = h('div', { class: 'sheet' + (cls ? ' ' + cls : ''), role: 'dialog', 'aria-modal': 'true' }, grab, content);
   const backdrop = h('div', { class: 'backdrop', onclick: () => closeSheet() });
   const wrap = h('div', { class: 'wrap' }, backdrop, sheet);
   $('#layer').append(wrap);
@@ -728,6 +747,88 @@ function openCart() {
   openSheet([body, foot]);
 }
 $('#cartBtn').addEventListener('click', openCart);
+
+/* ---------- pilule filtre / tri ---------- */
+const fsig = () => [state.sort !== 'date' ? state.sort : '', state.fBrands.join('-'), state.fStock ? 's' : '', state.fMin || '', state.fMax || ''].join('|').replace(/^\|+$/, '');
+function resetFilters() { state.fBrands = []; state.fStock = false; state.fMin = null; state.fMax = null; }
+const nFilters = () => state.fBrands.length + (state.fStock ? 1 : 0) + (state.fMin || state.fMax ? 1 : 0);
+const FILT = 'M4 7h9 M17 7h3 M15 5v4 M4 17h3 M11 17h9 M9 15v4';
+const SORTI = 'M8 5v14 M5 16l3 3 3-3 M16 19V5 M13 8l3-3 3 3';
+const CHECK = 'M5 12l5 5 9-10';
+function updFab() {
+  const fab = $('#fab');
+  if (!fab) return;
+  fab.hidden = state.tab === 'mer' || !!state.query;
+  const n = nFilters();
+  const bf = $('#fbFilter'), bs = $('#fbSort');
+  bf.setAttribute('aria-label', t('filter')); bs.setAttribute('aria-label', t('sort'));
+  bf.replaceChildren(icon(FILT, 22, 1.6), h('span', { class: 'nb', hidden: !n }, String(n)));
+  bs.replaceChildren(icon(SORTI, 22, 1.6), state.sort !== 'date' ? h('i', { class: 'dt' }) : null);
+}
+$('#fbFilter').addEventListener('click', () => openFilter());
+$('#fbSort').addEventListener('click', () => openSort());
+const setNavH = () => document.documentElement.style.setProperty('--navh', $('#tabs').offsetHeight + 'px');
+setNavH(); window.addEventListener('resize', setNavH);
+if (window.ResizeObserver) new ResizeObserver(setNavH).observe($('#tabs'));
+
+const sheetHead = (title) => h('div', { class: 'shead' }, h('h2', {}, title), closeBtn());
+function openSort() {
+  openSheet(h('div', { class: 'sbody' },
+    sheetHead(t('sort')),
+    h('div', { class: 'mlist' }, Object.keys(SORTS).map((k) => h('button', {
+      class: 'mrow' + (state.sort === k ? ' sel' : ''),
+      onclick: () => { state.sort = k; store.set('sort', k); closeSheet(); $('#scroller').scrollTop = 0; updFab(); load(); }
+    }, h('span', {}, t(SORTS[k][2])), state.sort === k ? icon(CHECK, 18, 1.8) : null)))), 'auto');
+}
+let merkerMap = null;
+async function loadMerker() {
+  if (merkerMap) return merkerMap;
+  const c = store.get('merker', null);
+  if (c && Date.now() - c.t < 864e5) { merkerMap = c.m; return merkerMap; }
+  const { data } = await api('/products/attributes/' + MERKE_ATTR + '/terms', { per_page: 100, _fields: 'id,name' });
+  merkerMap = {};
+  data.forEach((x) => { merkerMap[x.id] = text(x.name); });
+  store.set('merker', { t: Date.now(), m: merkerMap });
+  return merkerMap;
+}
+function openFilter() {
+  const draft = { brands: new Set(state.fBrands), stock: state.fStock, min: state.fMin, max: state.fMax };
+  let brands = [], q = '';
+  const body = h('div', { class: 'sbody' }, sheetHead(t('filter')), h('div', { class: 'fload' }, '…'));
+  const listBox = h('div', {});
+  const drawBrands = () => {
+    const f = q.trim().toLowerCase();
+    listBox.replaceChildren(...brands.filter((b) => !f || b.name.toLowerCase().includes(f)).map((b) => {
+      const on = draft.brands.has(b.id);
+      const row = h('button', { class: 'frow' + (on ? ' on' : ''), onclick: () => { if (draft.brands.has(b.id)) draft.brands.delete(b.id); else draft.brands.add(b.id); drawBrands(); } },
+        h('span', { class: 'nm' }, b.name, h('span', { class: 'ct' }, String(b.count))), h('span', { class: 'chk' }, icon(CHECK, 14, 2)));
+      return row;
+    }));
+  };
+  const draw = () => {
+    const stockRow = h('button', { class: 'frow' + (draft.stock ? ' on' : ''), onclick: () => { draft.stock = !draft.stock; draw(); } }, h('span', { class: 'nm' }, t('instock_only')), h('span', { class: 'chk' }, icon(CHECK, 14, 2)));
+    const mk = (key, ph) => h('input', { type: 'number', inputmode: 'numeric', min: '0', placeholder: ph, value: draft[key] || '', oninput: (e) => { draft[key] = e.target.value ? Number(e.target.value) : null; } });
+    const bsearch = h('input', { class: 'bsearch', type: 'search', placeholder: t('brand_search'), value: q, autocomplete: 'off', oninput: (e) => { q = e.target.value; drawBrands(); } });
+    body.replaceChildren(sheetHead(t('filter')),
+      h('div', { class: 'fsec' }, stockRow),
+      h('div', { class: 'fsec' }, h('h3', {}, t('price')), h('div', { class: 'prange' }, mk('min', t('price_from')), mk('max', t('price_to')))),
+      brands.length ? h('div', { class: 'fsec' }, h('h3', {}, t('brands')), brands.length > 10 ? bsearch : null, listBox) : null);
+    drawBrands();
+  };
+  const apply = h('button', { class: 'cta', onclick: () => {
+    state.fBrands = [...draft.brands]; state.fStock = draft.stock; state.fMin = draft.min; state.fMax = draft.max;
+    closeSheet(); $('#scroller').scrollTop = 0; updFab(); load();
+  } }, t('show_results'));
+  const reset = h('button', { class: 'ghost', onclick: () => { draft.brands.clear(); draft.stock = false; draft.min = null; draft.max = null; q = ''; draw(); } }, t('reset'));
+  openSheet([body, h('div', { class: 'actions' }, reset, apply)]);
+  const cat = state.sub || catId();
+  Promise.all([loadMerker(), api('/products/collection-data', { category: cat, 'calculate_attribute_counts[0][taxonomy]': 'pa_merke', 'calculate_attribute_counts[0][query_type]': 'or' })])
+    .then(([names, { data }]) => {
+      brands = (data.attribute_counts || []).filter((x) => names[x.term]).map((x) => ({ id: x.term, name: names[x.term], count: x.count })).sort((a, b) => a.name.localeCompare(b.name, 'nb'));
+      draw();
+    })
+    .catch(() => { body.replaceChildren(sheetHead(t('filter')), h('div', { class: 'fload' }, t('filter_err'))); });
+}
 
 /* ---------- page Mer ---------- */
 const CHEV = 'M9 6l6 6-6 6';
