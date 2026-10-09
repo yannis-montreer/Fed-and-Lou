@@ -1,6 +1,7 @@
 :root{--ink:#1a1a1a;--mute:#6b6862;--line:#e6e4e1;--line2:#d3cfc9;--field:#bdb9b3;--sale:#9b2a2a;--ph:#f3f0ec}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 input{-webkit-user-select:text;user-select:text}
+*{touch-action:pan-x pan-y}
 img{-webkit-user-drag:none}
 :root{--bh:calc(env(safe-area-inset-top) + 51px)}
 html,body{margin:0;height:100%;background:#fff;color:var(--ink);font-family:'Hanken Grotesk',-apple-system,BlinkMacSystemFont,sans-serif;overscroll-behavior:none}
@@ -177,3 +178,8 @@ nav button.on span{font-weight:600}
 .seg{display:flex;border:1px solid var(--ink);margin-top:10px}
 .seg button{flex:1;height:46px;border:0;background:#fff;font-size:14px}
 .seg button.on{background:var(--ink);color:#fff;font-weight:500}
+
+/* zoom par pincement sur l'image de la fiche : l'image passe au-dessus de tout, puis revient seule */
+.zoomlay{position:fixed;inset:0;z-index:300;pointer-events:none;background:rgba(26,26,26,0);transition:background .25s}
+.zf{position:absolute;background:var(--ph);transform-origin:0 0;will-change:transform}
+.zf img{display:block;width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}

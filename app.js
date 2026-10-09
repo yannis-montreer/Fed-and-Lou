@@ -528,6 +528,50 @@ async function sampleColor(url) {
   } catch (e) { return null; }
 }
 
+/* ---------- pas de zoom de page (le zoom est réservé à l'image de la fiche) ---------- */
+['gesturestart', 'gesturechange', 'gestureend'].forEach((ev) => document.addEventListener(ev, (e) => e.preventDefault(), { passive: false }));
+document.addEventListener('touchmove', (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+
+function enablePinch(gal) {
+  let pz = null;
+  const dist = (a, b) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+  const mid = (a, b) => ({ x: (a.clientX + b.clientX) / 2, y: (a.clientY + b.clientY) / 2 });
+  gal.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 2 || pz) return;
+    const a = e.touches[0], b = e.touches[1], m = mid(a, b);
+    const el = document.elementFromPoint(m.x, m.y);
+    const img = el && el.tagName === 'IMG' && gal.contains(el) ? el : e.target.closest && e.target.closest('img');
+    if (!img || !gal.contains(img)) return;
+    const r = gal.getBoundingClientRect();
+    const zf = h('div', { class: 'zf', style: 'left:' + r.left + 'px;top:' + r.top + 'px;width:' + r.width + 'px;height:' + r.height + 'px' }, h('img', { src: img.currentSrc || img.src, alt: '' }));
+    const lay = h('div', { class: 'zoomlay' }, zf);
+    document.body.append(lay);
+    img.style.visibility = 'hidden';
+    gal.style.overflowX = 'hidden';
+    pz = { img, lay, zf, r, d0: dist(a, b), p0: { x: m.x - r.left, y: m.y - r.top } };
+    e.preventDefault();
+  }, { passive: false });
+  gal.addEventListener('touchmove', (e) => {
+    if (!pz || e.touches.length < 2) return;
+    const a = e.touches[0], b = e.touches[1], m = mid(a, b);
+    const k = Math.min(4, Math.max(1, dist(a, b) / pz.d0));
+    const tx = m.x - pz.r.left - k * pz.p0.x, ty = m.y - pz.r.top - k * pz.p0.y;
+    pz.zf.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + k + ')';
+    pz.lay.style.background = 'rgba(26,26,26,' + Math.min(0.55, (k - 1) * 0.35) + ')';
+    e.preventDefault();
+  }, { passive: false });
+  const end = (e) => {
+    if (!pz || e.touches.length >= 2) return;
+    const z = pz; pz = null;
+    z.zf.style.transition = 'transform .26s ease';
+    z.zf.style.transform = 'translate(0,0) scale(1)';
+    z.lay.style.background = 'rgba(26,26,26,0)';
+    setTimeout(() => { z.lay.remove(); z.img.style.visibility = ''; gal.style.overflowX = ''; }, 280);
+  };
+  gal.addEventListener('touchend', end);
+  gal.addEventListener('touchcancel', end);
+}
+
 function openProduct(p) {
   let shade = p.shades.length ? p.shades[0] : '';
   const countOf = (sh) => cart.filter((l) => l.key === p.id + '|' + sh).reduce((n, l) => n + l.qty, 0);
@@ -563,6 +607,7 @@ function openProduct(p) {
     next.hidden = max < 4 || gal.scrollLeft > max - 4;
   };
   gal.addEventListener('scroll', updArrows, { passive: true });
+  enablePinch(gal);
   const cnt = h('span', { class: 'cnt' });
   const showCount = () => {
     const n = countOf(shade);
