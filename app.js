@@ -694,8 +694,8 @@ function openProduct(p) {
       requestAnimationFrame(() => gal.classList.remove('swap'));
     }, 130);
   };
-  const prev = h('button', { class: 'gnav l', 'aria-label': t('prev_img'), hidden: true, onclick: () => gal.scrollBy({ left: -gal.clientWidth, behavior: 'smooth' }) }, icon('M15 6l-6 6 6 6', 20, 1.6));
-  const next = h('button', { class: 'gnav r', 'aria-label': t('next_img'), hidden: true, onclick: () => gal.scrollBy({ left: gal.clientWidth, behavior: 'smooth' }) }, icon('M9 6l6 6-6 6', 20, 1.6));
+  const prev = h('button', { class: 'gnav l', 'aria-label': t('prev_img'), hidden: true, onclick: () => gal.scrollBy({ left: -gal.clientWidth, behavior: 'smooth' }) }, icon('M15 6l-6 6 6 6', 26, 1.8));
+  const next = h('button', { class: 'gnav r', 'aria-label': t('next_img'), hidden: true, onclick: () => gal.scrollBy({ left: gal.clientWidth, behavior: 'smooth' }) }, icon('M9 6l6 6-6 6', 26, 1.8));
   const updArrows = () => {
     const max = gal.scrollWidth - gal.clientWidth;
     prev.hidden = gal.scrollLeft < 4;

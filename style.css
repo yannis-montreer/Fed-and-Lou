@@ -82,9 +82,9 @@ nav button.on span{font-weight:600}
 .gallery img{scroll-snap-stop:always;transition:opacity .15s;flex:none;width:100%;height:100%;object-fit:contain;scroll-snap-align:center;mix-blend-mode:multiply}
 .close{position:absolute;top:calc(8px + 10px + 4px);right:8px;width:44px;height:44px;border:0;border-radius:22px;background:rgba(255,255,255,.92);display:flex;align-items:center;justify-content:center;padding:0;z-index:2}
 .gwrap{position:relative}
-.gnav{position:absolute;top:50%;margin-top:-18px;width:36px;height:36px;border:0;border-radius:50%;background:rgba(255,255,255,.92);box-shadow:0 1px 6px rgba(26,26,26,.2);display:flex;align-items:center;justify-content:center;padding:0;z-index:2}
-.gnav.l{left:8px}
-.gnav.r{right:8px}
+.gnav{position:absolute;top:50%;margin-top:-18px;width:36px;height:36px;border:0;border-radius:0;background:transparent;color:var(--ink);display:flex;align-items:center;justify-content:center;padding:0;z-index:2}
+.gnav.l{left:4px}
+.gnav.r{right:4px}
 .gnav[hidden]{display:none}
 .gwrap .close{top:8px}
 .info{padding:18px 16px 0;display:flex;flex-direction:column;gap:8px}
