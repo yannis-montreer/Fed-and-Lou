@@ -68,8 +68,8 @@ nav button.on{color:var(--ink)}
 nav button.on span{font-weight:600}
 
 /* sheets */
-.backdrop{position:fixed;inset:0;background:rgba(26,26,26,.45);opacity:0;transition:opacity .22s;z-index:10}
-.sheet{position:fixed;left:0;right:0;bottom:0;margin:0 auto;max-width:560px;height:92vh;height:92dvh;background:#fff;border-radius:20px 20px 0 0;display:flex;flex-direction:column;overflow:hidden;transform:translateY(100%);transition:transform .26s ease;z-index:11}
+.backdrop{position:fixed;inset:0;background:rgba(26,26,26,.45);opacity:0;transition:opacity .22s;z-index:100}
+.sheet{position:fixed;left:0;right:0;bottom:0;margin:0 auto;max-width:560px;height:92vh;height:92dvh;background:#fff;border-radius:20px 20px 0 0;display:flex;flex-direction:column;overflow:hidden;transform:translateY(100%);transition:transform .26s ease;z-index:101}
 .show .backdrop{opacity:1}
 .show .sheet{transform:none}
 .grab{display:flex;justify-content:center;padding:12px 0 14px;flex:none;touch-action:none;cursor:grab}
