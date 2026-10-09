@@ -16,7 +16,7 @@ const TABS = [
   { key: 'mer', label: 'Mer', icon: 'M5 12a1.2 1.2 0 1 0 .01 0 M12 12a1.2 1.2 0 1 0 .01 0 M19 12a1.2 1.2 0 1 0 .01 0' }
 ];
 const VERSION = 'Demo 1.1';
-const BUILD = 'b35';
+const BUILD = 'b37';
 const SORTS = { date: ['date', 'desc', 'sort_new'], popularity: ['popularity', 'desc', 'sort_pop'], price_asc: ['price', 'asc', 'sort_plow'], price_desc: ['price', 'desc', 'sort_phigh'] };
 const MERKE_ATTR = 4; // attribut « Merke » (marque) de la boutique
 const FILTERS = [['all', 'all'], ['new', 'f_new'], ['sale', 'f_sale']];
@@ -43,7 +43,16 @@ const I18N = {
     filter: 'Filter', sort: 'Sorter', brands: 'Merker', price: 'Pris', price_from: 'Fra kr', price_to: 'Til kr', instock_only: 'Kun på lager', reset: 'Nullstill', show_results: 'Vis resultater',
     sort_new: 'Nyeste', sort_pop: 'Populære', sort_plow: 'Pris: lav til høy', sort_phigh: 'Pris: høy til lav', brand_search: 'Søk etter merke', filter_err: 'Kunne ikke hente filtre.',
     pop_title: 'Populære produkter', all_title: 'Alle produkter',
-    remove: 'Fjern', sugg_all: (q) => 'Se alle resultater for «' + q + '»', no_match: 'Ingen treff', sugg_h: 'Søkeforslag', cat_h: 'Kategorier', prod_h: 'Produkter', cat_pill: 'Kategori: ', oos: 'Utsolgt', prev_img: 'Forrige bilde', next_img: 'Neste bilde', close: 'Lukk', add: 'Legg i handlekurv', see_site: 'Se på fredrikoglouisa.no', cart: 'Handlekurv', cart_empty: 'Handlekurven er tom.',
+    remove: 'Fjern', sugg_all: (q) => 'Se alle resultater for «' + q + '»', no_match: 'Ingen treff', sugg_h: 'Søkeforslag', cat_h: 'Kategorier', prod_h: 'Produkter', cat_pill: 'Kategori: ',     co_title: 'Kasse', co_steps: ['Se gjennom', 'Betal', 'Gled deg'], co_demo: 'Demo: ingen ekte betaling eller bestilling.',
+    co_subtotal: 'Delsum', co_discount: 'Rabatt', co_giftl: 'Gavekort', co_shipping: 'Frakt', co_free: 'Gratis', co_total: 'Totalt',
+    co_code_q: 'Klikk her om du har en rabattkode', co_gift_q: 'Klikk her om du har et gavekort', co_code_ph: 'Rabattkode', co_gift_ph: 'Gavekortnummer',
+    co_apply: 'Bruk', co_bad: 'Ugyldig kode. Prøv DEMO10.', co_bad_gift: 'Ugyldig gavekort. Prøv GAVE100.', co_ok_code: 'Rabatt på 10 % er lagt til.', co_ok_gift: 'Gavekort på 100 kr er lagt til.',
+    co_ship_note: 'Fraktleverandør velges i kassen. Forventet leveringstid er 1–4 dager etter at pakken er sendt fra vårt lager.',
+    co_to: 'Til kassen', co_share: 'Del handlekurv', co_copied: 'Kopiert',
+    co_address: 'Leveringsadresse', co_example: 'Eksempel (demo)', co_delivery: 'Levering', co_store: 'Hent i butikk', co_store_sub: 'Klar for henting innen 1–2 dager',
+    co_std: 'Standard levering', co_std_sub: '1–4 dager · gratis over 1 000 kr', co_payment: 'Betaling', co_card: 'Betalingskort', co_summary: 'Oppsummering',
+    co_pay: 'Betal', co_thanks: 'Takk for bestillingen!', co_order_no: 'Ordrenummer', co_continue: 'Fortsett å handle', co_done_note: 'Dette var en demo. Ingenting er bestilt eller belastet.', co_confirm_sub: 'En bekreftelse ville blitt sendt på e-post.',
+    oos: 'Utsolgt', prev_img: 'Forrige bilde', next_img: 'Neste bilde', close: 'Lukk', add: 'Legg i handlekurv', see_site: 'Se på fredrikoglouisa.no', cart: 'Handlekurv', cart_empty: 'Handlekurven er tom.',
     fewer: 'Færre', more: 'Flere', sum: 'Sum', cart_note: 'Demo: handlekurven lagres bare på denne enheten. Betalingen gjøres hos fredrikoglouisa.no.',
     checkout: 'Fullfør på fredrikoglouisa.no', fav_save: 'Lagre i favoritter',
     mer: 'Mer', favorites: 'Favoritter', fav_count: (n) => n + (n === 1 ? ' produkt' : ' produkter'), fav_empty: 'Ingen favoritter ennå',
@@ -60,7 +69,7 @@ const I18N = {
         ['Lagret på enheten', 'Favoritter, handlekurv, språkvalg og sist viste produkter lagres bare på denne enheten, i nettleserens lokale lagring. Ingenting sendes videre. Du kan slette alt under «Tøm lagrede data».'],
         ['Tredjeparter', 'Produktdata hentes via en mellomtjener hos Cloudflare, som bare videresender offentlige produktdata fra fredrikoglouisa.no. Cloudflare ser teknisk sett IP-adressen din. Det du skriver i søkefeltet sendes til søketjenesten Clerk.io, den samme som fredrikoglouisa.no bruker, som også ser IP-adressen din. Skrifttyper lastes fra Google Fonts, som også ser IP-adressen din.']]],
       ['Vilkår og juridisk info', [
-        ['', 'Demoen er kun til visning. Handlekurven er lokal og brukes bare for å vise hvordan den kan fungere: ingen bestilling, ingen betaling og ingen kundedata.'],
+        ['', 'Demoen er kun til visning. Handlekurven er lokal og brukes bare for å vise hvordan den kan fungere: ingen bestilling, ingen betaling og ingen kundedata. Kassen er en simulering: ingen kortopplysninger eller personopplysninger samles inn, og koden «DEMO10» og gavekortet «GAVE100» finnes bare i demoen.'],
         ['Kjøp', '«Fullfør på fredrikoglouisa.no» sender deg til den ordinære nettbutikken. Der skjer kjøpet på butikkens egne vilkår.'],
         ['Priser og lager', 'Priser, tilbud og lagerstatus hentes fra nettbutikken, men kan avvike fra det som gjelder der. Det som står på fredrikoglouisa.no er gjeldende.'],
         ['Varemerker', 'Varemerker, produktnavn, bilder og tekster tilhører sine respektive eiere.']]]
@@ -76,7 +85,16 @@ const I18N = {
     filter: 'Filter', sort: 'Sort', brands: 'Brands', price: 'Price', price_from: 'From kr', price_to: 'To kr', instock_only: 'In stock only', reset: 'Reset', show_results: 'Show results',
     sort_new: 'Newest', sort_pop: 'Most popular', sort_plow: 'Price: low to high', sort_phigh: 'Price: high to low', brand_search: 'Search brand', filter_err: "Couldn't load filters.",
     pop_title: 'Popular products', all_title: 'All products',
-    remove: 'Remove', sugg_all: (q) => 'See all results for “' + q + '”', no_match: 'No matches', sugg_h: 'Suggestions', cat_h: 'Categories', prod_h: 'Products', cat_pill: 'Category: ', oos: 'Out of stock', prev_img: 'Previous image', next_img: 'Next image', close: 'Close', add: 'Add to cart', see_site: 'View on fredrikoglouisa.no', cart: 'Cart', cart_empty: 'Your cart is empty.',
+    remove: 'Remove', sugg_all: (q) => 'See all results for “' + q + '”', no_match: 'No matches', sugg_h: 'Suggestions', cat_h: 'Categories', prod_h: 'Products', cat_pill: 'Category: ',     co_title: 'Checkout', co_steps: ['Review', 'Pay', 'Enjoy'], co_demo: 'Demo: no real payment or order.',
+    co_subtotal: 'Subtotal', co_discount: 'Discount', co_giftl: 'Gift card', co_shipping: 'Shipping', co_free: 'Free', co_total: 'Total',
+    co_code_q: 'Click here if you have a discount code', co_gift_q: 'Click here if you have a gift card', co_code_ph: 'Discount code', co_gift_ph: 'Gift card number',
+    co_apply: 'Apply', co_bad: 'Invalid code. Try DEMO10.', co_bad_gift: 'Invalid gift card. Try GAVE100.', co_ok_code: '10 % discount added.', co_ok_gift: 'Gift card of 100 kr added.',
+    co_ship_note: 'The carrier is chosen at checkout. Expected delivery time is 1–4 days after the parcel has been shipped from our warehouse.',
+    co_to: 'To checkout', co_share: 'Share cart', co_copied: 'Copied',
+    co_address: 'Delivery address', co_example: 'Example (demo)', co_delivery: 'Delivery', co_store: 'Pick up in store', co_store_sub: 'Ready for pickup within 1–2 days',
+    co_std: 'Standard delivery', co_std_sub: '1–4 days · free over 1,000 kr', co_payment: 'Payment', co_card: 'Payment card', co_summary: 'Summary',
+    co_pay: 'Pay', co_thanks: 'Thank you for your order!', co_order_no: 'Order number', co_continue: 'Continue shopping', co_done_note: 'This was a demo. Nothing has been ordered or charged.', co_confirm_sub: 'A confirmation would have been sent by e-mail.',
+    oos: 'Out of stock', prev_img: 'Previous image', next_img: 'Next image', close: 'Close', add: 'Add to cart', see_site: 'View on fredrikoglouisa.no', cart: 'Cart', cart_empty: 'Your cart is empty.',
     fewer: 'Fewer', more: 'More', sum: 'Total', cart_note: 'Demo: the cart is only stored on this device. Payment is made at fredrikoglouisa.no.',
     checkout: 'Complete at fredrikoglouisa.no', fav_save: 'Save to favorites',
     mer: 'More', favorites: 'Favorites', fav_count: (n) => n + (n === 1 ? ' product' : ' products'), fav_empty: 'No favorites yet',
@@ -93,7 +111,7 @@ const I18N = {
         ['Stored on the device', 'Favorites, cart, language choice and recently viewed products are stored only on this device, in the browser\'s local storage. Nothing is sent on. You can delete everything under "Clear saved data".'],
         ['Third parties', 'Product data is fetched through an intermediary server at Cloudflare, which only forwards public product data from fredrikoglouisa.no. Cloudflare technically sees your IP address. What you type in the search field is sent to the search service Clerk.io, the same one fredrikoglouisa.no uses, which also sees your IP address. Fonts are loaded from Google Fonts, which also sees your IP address.']]],
       ['Terms and legal information', [
-        ['', 'The demo is for display only. The cart is local and only shows how it could work: no ordering, no payment and no customer data.'],
+        ['', 'The demo is for display only. The cart is local and only shows how it could work: no ordering, no payment and no customer data. The checkout is a simulation: no card details or personal data are collected, and the code "DEMO10" and the gift card "GAVE100" exist only in the demo.'],
         ['Purchases', '"Complete at fredrikoglouisa.no" takes you to the regular online store. Purchases there are made under the store\'s own terms.'],
         ['Prices and stock', 'Prices, offers and stock status are fetched from the online store but may differ from what applies there. What is shown on fredrikoglouisa.no is binding.'],
         ['Trademarks', 'Trademarks, product names, images and texts belong to their respective owners.']]]
@@ -647,6 +665,7 @@ window.addEventListener('popstate', () => {
     if (skipPop === 0 && pendingAfterPop) { const f = pendingAfterPop; pendingAfterPop = null; f(); }
     return;
   }
+  if (coEl) { coPop(); return; }
   if (sheetEl) { sheetPushed = false; closeSheet(); return; }
   if (searchPushed && state.tab !== 'mer') { searchPushed = false; exitSearch(); return; }
   sheetPushed = false;
@@ -968,7 +987,9 @@ function openCart() {
     const sum = cart.reduce((s, l) => s + l.price * l.qty, 0);
     body.append(h('div', { class: 'total' }, h('span', {}, t('sum')), h('span', {}, kr(sum))));
     body.append(h('div', { class: 'note' }, t('cart_note')));
-    foot.append(h('div', { class: 'actions' }, h('a', { class: 'cta', href: SITE, target: '_blank', rel: 'noopener' }, t('checkout'))));
+    foot.append(h('div', { class: 'actions col' },
+      h('button', { class: 'cta', onclick: () => { afterClose = () => openCheckout(); closeSheet(); } }, t('co_to')),
+      h('a', { class: 'reallink', href: SITE, target: '_blank', rel: 'noopener' }, t('checkout'))));
   };
   draw();
   openSheet([body, foot]);
@@ -1055,6 +1076,170 @@ function openFilter() {
       draw();
     })
     .catch(() => { body.replaceChildren(sheetHead(t('filter')), h('div', { class: 'fload' }, t('filter_err'))); });
+}
+
+/* ---------- caisse simulée (aucun paiement, aucune commande, aucune saisie de carte) ---------- */
+let coEl = null, coStep = 0, coDepth = 0, coDone = false, coOpenCode = false, coOpenGift = false, coMsg = '';
+let coDemo = { pct: 0, gift: 0, ship: 'store', pay: 'vipps', order: null };
+const cartSum = (lines) => (lines || cart).reduce((n, l) => n + l.price * l.qty, 0);
+function coTotals(lines) {
+  const sub = cartSum(lines);
+  const disc = Math.round(sub * coDemo.pct / 100);
+  const gift = Math.min(coDemo.gift, Math.max(0, sub - disc));
+  const ship = coDemo.ship === 'std' && sub - disc < 1000 ? 59 : 0;
+  return { sub, disc, gift, ship, total: sub - disc - gift + ship };
+}
+function shadeLine(l) {
+  if (!l.shade) return null;
+  const txt = l.isColor === false ? l.shade : cleanShade(l.shade);
+  const numOnly = /^[\d\s.,]+$/.test(l.shade);
+  const col = l.isColor ? (l.col || swCache[l.img] || null) : null;
+  const dot = col ? h('span', { class: 'sw', style: 'background:' + col }) : null;
+  const label = dot ? (numOnly ? null : txt) : (numOnly ? l.shade : txt);
+  return dot || label ? h('div', { class: 'var vr' }, dot, label) : null;
+}
+function openCheckout() {
+  if (coEl) return;
+  coDemo = { pct: 0, gift: 0, ship: 'store', pay: 'vipps', order: null };
+  coStep = 1; coDepth = 1; coDone = false; coOpenCode = false; coOpenGift = false; coMsg = '';
+  history.pushState({ co: 1 }, '');
+  coEl = h('div', { class: 'co', role: 'dialog', 'aria-modal': 'true' },
+    h('div', { class: 'cohead' }, h('button', { class: 'cob', id: 'coBtn', type: 'button' }), h('h2', {}, t('co_title'))),
+    h('div', { class: 'costeps', id: 'coSteps' }),
+    h('div', { class: 'cobody', id: 'coBody' }),
+    h('div', { class: 'cofoot', id: 'coFoot' }));
+  document.body.append(coEl);
+  coRender();
+}
+function closeCheckout() {
+  if (!coEl) return;
+  const n = coDepth, done = coDone;
+  coDepth = 0; coEl.remove(); coEl = null; coStep = 0;
+  const reopen = !done && cart.length;
+  if (n > 0) {
+    skipPop++;
+    if (reopen) { const f = () => openCart(); pendingAfterPop = f; setTimeout(() => { if (pendingAfterPop === f) { pendingAfterPop = null; f(); } }, 450); }
+    history.go(-n);
+  } else if (reopen) setTimeout(openCart, 0);
+}
+function coPop() {
+  if (coStep === 3) { coDepth = 1; closeCheckout(); return; }
+  if (coStep === 2) { coStep = 1; coDepth = 1; coRender(); return; }
+  coDepth = 0; coEl.remove(); coEl = null; coStep = 0;
+  if (cart.length) setTimeout(openCart, 0);
+}
+function coRender() {
+  if (!coEl) return;
+  const steps = t('co_steps');
+  $('#coSteps').replaceChildren(...[1, 2, 3].map((n) => h('div', { class: 'cost' + (coStep === n ? ' on' : '') + (coStep > n ? ' ok' : '') },
+    h('span', { class: 'cn' }, coStep > n ? icon(CHECK, 14, 2) : String(n)), h('span', { class: 'cl' }, steps[n - 1]))));
+  const btn = $('#coBtn');
+  btn.setAttribute('aria-label', coStep === 2 ? t('back') : t('close'));
+  btn.onclick = coStep === 2 ? () => history.back() : () => closeCheckout();
+  btn.replaceChildren(coStep === 2 ? icon('M15 6l-6 6 6 6', 22, 1.5) : icon(CLOSE, 22, 1.5));
+  const body = $('#coBody'), foot = $('#coFoot');
+  $('#coBody').scrollTop = 0;
+  if (coStep === 1) coStep1(body, foot);
+  else if (coStep === 2) coStep2(body, foot);
+  else coStep3(body, foot);
+}
+const coRow = (k, v, cls) => h('div', { class: 'cort' + (cls ? ' ' + cls : '') }, h('span', {}, k), h('span', {}, v));
+const coBanner = () => h('div', { class: 'codemo' }, t('co_demo'));
+function coTotalsBox(tt, withShip) {
+  return h('div', { class: 'cotot' },
+    coRow(t('co_subtotal'), kr(tt.sub)),
+    tt.disc ? coRow(t('co_discount'), '−' + kr(tt.disc)) : null,
+    tt.gift ? coRow(t('co_giftl'), '−' + kr(tt.gift)) : null,
+    withShip ? coRow(t('co_shipping'), tt.ship ? kr(tt.ship) : t('co_free')) : null,
+    coRow(t('co_total'), kr(tt.total), 'big'));
+}
+function coFold(open, label, ph, onApply, toggle) {
+  const input = h('input', { type: 'text', placeholder: ph, autocomplete: 'off', autocapitalize: 'characters', 'aria-label': ph });
+  return h('div', { class: 'cofold' },
+    h('button', { class: 'cofq', type: 'button', onclick: toggle }, h('span', {}, label), icon(open ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6', 18, 1.5)),
+    open ? h('div', { class: 'cofin' }, input, h('button', { class: 'ghost', type: 'button', onclick: () => onApply(input.value.trim().toUpperCase()) }, t('co_apply'))) : null);
+}
+function coStep1(body, foot) {
+  if (!cart.length) {
+    body.replaceChildren(h('div', { class: 'void' }, t('cart_empty')));
+    foot.replaceChildren(h('div', { class: 'actions col' }, h('button', { class: 'cta', onclick: () => closeCheckout() }, t('co_continue'))));
+    return;
+  }
+  const lines = cart.map((l) => h('div', { class: 'line' },
+    h('div', { class: 'th' }, l.img ? h('img', { src: l.img, alt: '', onerror: (e) => e.target.remove() }) : null),
+    h('div', { class: 'lm' },
+      h('div', { class: 'brand' }, l.brand), h('div', { class: 'name' }, l.name),
+      shadeLine(l),
+      h('div', { class: 'price' }, kr(l.price * l.qty)),
+      h('div', { class: 'qty' },
+        h('button', { 'aria-label': t('fewer'), onclick: () => { l.qty--; if (l.qty <= 0) cart = cart.filter((x) => x !== l); saveCart(); coRender(); } }, icon('M6 12h12', 14, 1.7)),
+        h('span', {}, l.qty),
+        h('button', { 'aria-label': t('more'), onclick: () => { l.qty++; saveCart(); coRender(); } }, icon('M6 12h12 M12 6v12', 14, 1.7)),
+        h('button', { class: 'del', 'aria-label': t('remove'), onclick: () => { cart = cart.filter((x) => x !== l); saveCart(); coRender(); } }, icon('M4 7h16 M9 7V5h6v2 M6 7l1 13h10l1-13 M10 11v6 M14 11v6', 20, 1.5))))));
+  const tt = coTotals();
+  body.replaceChildren(
+    coBanner(),
+    h('div', { class: 'colines' }, lines),
+    coTotalsBox(tt, false),
+    coFold(coOpenCode, t('co_code_q'), t('co_code_ph'), (v) => {
+      if (v === 'DEMO10') { coDemo.pct = 10; coMsg = t('co_ok_code'); } else coMsg = t('co_bad');
+      coRender();
+    }, () => { coOpenCode = !coOpenCode; coMsg = ''; coRender(); }),
+    coFold(coOpenGift, t('co_gift_q'), t('co_gift_ph'), (v) => {
+      if (v === 'GAVE100') { coDemo.gift = 100; coMsg = t('co_ok_gift'); } else coMsg = t('co_bad_gift');
+      coRender();
+    }, () => { coOpenGift = !coOpenGift; coMsg = ''; coRender(); }),
+    coMsg ? h('div', { class: 'comsg' }, coMsg) : document.createDocumentFragment(),
+    h('div', { class: 'conote' }, t('co_ship_note')));
+  foot.replaceChildren(h('div', { class: 'actions col' },
+    h('button', { class: 'cta', onclick: () => { history.pushState({ co: 2 }, ''); coDepth = 2; coStep = 2; coRender(); } }, t('co_to')),
+    h('button', { class: 'ghost wide', type: 'button', onclick: (e) => shareCart(e.currentTarget) }, t('co_share'))));
+}
+async function shareCart(btn) {
+  const tt = coTotals();
+  const text = cart.map((l) => l.qty + ' × ' + l.brand + ' ' + l.name).join('\n') + '\n' + t('co_total') + ': ' + kr(tt.total);
+  if (navigator.share) { try { await navigator.share({ title: 'Fredrik & Louisa', text }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+  try { await navigator.clipboard.writeText(text); const old = btn.textContent; btn.textContent = t('co_copied'); setTimeout(() => { btn.textContent = old; }, 1500); } catch (e) { /* ignorer */ }
+}
+function coOpt(on, title, sub, right, pick) {
+  return h('button', { class: 'opt' + (on ? ' on' : ''), type: 'button', onclick: pick },
+    h('span', { class: 'rad' }), h('span', { class: 'ot' }, h('b', {}, title), sub ? h('small', {}, sub) : null), right ? h('span', { class: 'or' }, right) : null);
+}
+function coStep2(body, foot) {
+  const tt = coTotals();
+  body.replaceChildren(
+    coBanner(),
+    h('div', { class: 'cosec' }, h('h3', {}, t('co_address')),
+      h('div', { class: 'coaddr' }, h('b', {}, 'Ola Nordmann'), h('span', {}, 'Eksempelveien 1'), h('span', {}, '0150 Oslo'), h('small', {}, t('co_example')))),
+    h('div', { class: 'cosec' }, h('h3', {}, t('co_delivery')),
+      coOpt(coDemo.ship === 'store', t('co_store'), t('co_store_sub'), t('co_free'), () => { coDemo.ship = 'store'; coRender(); }),
+      coOpt(coDemo.ship === 'std', t('co_std'), t('co_std_sub'), tt.sub - tt.disc >= 1000 ? t('co_free') : kr(59), () => { coDemo.ship = 'std'; coRender(); })),
+    h('div', { class: 'cosec' }, h('h3', {}, t('co_payment')),
+      coOpt(coDemo.pay === 'vipps', 'Vipps', '', '', () => { coDemo.pay = 'vipps'; coRender(); }),
+      coOpt(coDemo.pay === 'card', t('co_card'), '', '', () => { coDemo.pay = 'card'; coRender(); })),
+    h('div', { class: 'cosec' }, h('h3', {}, t('co_summary')), coTotalsBox(tt, true)));
+  foot.replaceChildren(h('div', { class: 'actions col' },
+    h('button', { class: 'cta', onclick: coPlace }, t('co_pay') + ' ' + kr(tt.total) + ' (demo)')));
+}
+function coPlace() {
+  const lines = cart.map((l) => ({ ...l }));
+  const tt = coTotals(lines);
+  coDemo.order = { no: 'FL-' + String(Math.floor(100000 + Math.random() * 900000)), lines, tt, ship: coDemo.ship };
+  cart = []; saveCart();
+  history.replaceState({ co: 3 }, '');
+  coStep = 3; coDone = true;
+  coRender();
+}
+function coStep3(body, foot) {
+  const o = coDemo.order;
+  body.replaceChildren(
+    h('div', { class: 'codone' }, h('span', { class: 'tick' }, icon(CHECK, 28, 2)), h('h3', {}, t('co_thanks')), h('p', {}, t('co_confirm_sub'))),
+    h('div', { class: 'cotot' }, coRow(t('co_order_no'), o.no), coRow(t('co_total'), kr(o.tt.total), 'big')),
+    h('div', { class: 'colines slim' }, o.lines.map((l) => h('div', { class: 'cline' }, h('span', {}, l.qty + ' × ' + l.name), h('span', {}, kr(l.price * l.qty))))),
+    h('div', { class: 'codemo' }, t('co_done_note')));
+  foot.replaceChildren(h('div', { class: 'actions col' },
+    h('button', { class: 'cta', onclick: () => closeCheckout() }, t('co_continue')),
+    h('a', { class: 'reallink', href: SITE, target: '_blank', rel: 'noopener' }, t('checkout'))));
 }
 
 /* ---------- page Mer ---------- */

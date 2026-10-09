@@ -269,3 +269,55 @@ nav button.on span{font-weight:600}
 .sugg .cchip{flex:none;height:34px;padding:0 14px;border-radius:17px;border:1px solid var(--line2);background:#fff;font-size:13px;white-space:nowrap}
 .sugg .sh + .srow{border-top:1px solid var(--line)}
 .suggOpen #fab{display:none}
+
+/* caisse simulée */
+.actions.col{flex-direction:column;gap:10px}
+.reallink{align-self:center;font-size:13px;color:var(--mute);text-decoration:underline;padding:4px 0}
+.ghost.wide{width:100%}
+.co{position:fixed;inset:0;z-index:150;margin:0 auto;max-width:560px;background:#fff;display:flex;flex-direction:column;overflow:hidden}
+.cohead{flex:none;display:flex;align-items:center;gap:6px;padding:calc(env(safe-area-inset-top) + 8px) 8px 4px}
+.cohead h2{margin:0;font-family:'Cormorant Garamond',serif;font-weight:600;font-size:28px}
+.cob{width:44px;height:44px;border:0;background:transparent;display:flex;align-items:center;justify-content:center;padding:0}
+.costeps{flex:none;display:flex;justify-content:space-between;margin:6px 16px 0;padding:14px 8px 12px;border:1px solid var(--line);position:relative}
+.costeps::before{content:'';position:absolute;left:12%;right:12%;top:27px;height:1px;background:var(--line2)}
+.cost{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--mute)}
+.cost .cn{width:26px;height:26px;border-radius:50%;border:1px solid var(--line2);background:#fff;color:var(--mute);display:flex;align-items:center;justify-content:center;font-size:12px}
+.cost.on .cn{background:var(--ink);border-color:var(--ink);color:#fff}
+.cost.on{color:var(--ink);font-weight:600}
+.cost.ok .cn{border-color:var(--ink);color:var(--ink)}
+.cost .cn svg{stroke:currentColor}
+.cobody{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:12px 0 8px}
+.cofoot{flex:none;border-top:1px solid var(--line);background:#fff}
+.codemo{margin:0 16px 12px;padding:10px 12px;border:1px dashed var(--line2);font-size:12.5px;color:var(--mute);text-align:center}
+.colines{border-top:1px solid var(--line);margin-bottom:6px}
+.colines.slim{padding:0 16px;border-top:0}
+.cline{display:flex;justify-content:space-between;gap:12px;padding:6px 0;font-size:14px}
+.cotot{margin:12px 16px;padding:14px 16px;border:1px solid var(--line)}
+.cort{display:flex;justify-content:space-between;padding:4px 0;font-size:14px}
+.cort.big{font-weight:600;font-size:16px;padding-top:8px}
+.cofold{margin:10px 16px 0;border:1px solid var(--line)}
+.cofq{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:46px;padding:0 14px;border:0;background:#fff;font-size:13.5px;color:var(--mute);text-align:left}
+.cofq svg{stroke:var(--mute);flex:none}
+.cofin{display:flex;gap:8px;padding:0 12px 12px}
+.cofin input{flex:1;min-width:0;height:44px;padding:0 12px;border:1px solid #cdc9c2;border-radius:8px;font-family:inherit;font-size:16px;text-transform:uppercase}
+.cofin input:focus{outline:none;border-color:var(--ink)}
+.cofin .ghost{height:44px;padding:0 18px}
+.comsg{margin:10px 16px 0;font-size:13px;color:var(--ink)}
+.conote{margin:14px 16px 8px;font-size:12px;color:var(--mute);line-height:1.5}
+.cosec{margin:0 16px 14px}
+.cosec h3{margin:6px 0 8px;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+.coaddr{display:flex;flex-direction:column;gap:2px;padding:12px 14px;border:1px solid var(--line);font-size:14px}
+.coaddr small{color:var(--mute);margin-top:4px}
+.opt{display:flex;align-items:center;gap:12px;width:100%;min-height:58px;margin-bottom:8px;padding:8px 14px;border:1px solid var(--line2);background:#fff;text-align:left;font-size:14px}
+.opt .rad{flex:none;width:18px;height:18px;border-radius:50%;border:1px solid #cdc9c2;box-shadow:inset 0 0 0 4px #fff}
+.opt.on{border-color:var(--ink)}
+.opt.on .rad{background:var(--ink);border-color:var(--ink)}
+.opt .ot{flex:1;display:flex;flex-direction:column;gap:2px}
+.opt .ot small{color:var(--mute);font-size:12px;font-weight:300}
+.opt .or{font-size:13px;color:var(--mute)}
+.codone{display:flex;flex-direction:column;align-items:center;text-align:center;padding:18px 24px 6px}
+.codone .tick{width:56px;height:56px;border-radius:50%;background:var(--ink);display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.codone .tick svg{stroke:#fff}
+.codone h3{margin:0 0 6px;font-family:'Cormorant Garamond',serif;font-weight:600;font-size:28px}
+.codone p{margin:0;font-size:14px;color:var(--mute)}
+.actions.col .cta,.actions.col .ghost{flex:none;width:100%;height:52px}
