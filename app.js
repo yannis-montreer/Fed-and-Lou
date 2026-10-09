@@ -44,7 +44,7 @@ const I18N = {
     pop_title: 'Populære produkter', all_title: 'Alle produkter',
     remove: 'Fjern', sugg_all: (q) => 'Se alle resultater for «' + q + '»', no_match: 'Ingen treff', sugg_h: 'Søkeforslag', cat_h: 'Kategorier', prod_h: 'Produkter', cat_pill: 'Kategori: ', oos: 'Utsolgt', prev_img: 'Forrige bilde', next_img: 'Neste bilde', close: 'Lukk', add: 'Legg i handlekurv', see_site: 'Se på fredrikoglouisa.no', cart: 'Handlekurv', cart_empty: 'Handlekurven er tom.',
     fewer: 'Færre', more: 'Flere', sum: 'Sum', cart_note: 'Demo: handlekurven lagres bare på denne enheten. Betalingen gjøres hos fredrikoglouisa.no.',
-    checkout: 'Fullfør på fredrikoglouisa.no', ptr_go: 'Slipp for å oppdatere', ptr: 'Dra for å oppdatere', fav_save: 'Lagre i favoritter',
+    checkout: 'Fullfør på fredrikoglouisa.no', fav_save: 'Lagre i favoritter',
     mer: 'Mer', favorites: 'Favoritter', fav_count: (n) => n + (n === 1 ? ' produkt' : ' produkter'), fav_empty: 'Ingen favoritter ennå',
     fav_empty_sub: 'Trykk på hjertet på et produkt for å lagre det her.', back: 'Tilbake',
     language: 'Språk', info: 'Informasjon', data: 'Data', clear: 'Tøm lagrede data',
@@ -77,7 +77,7 @@ const I18N = {
     pop_title: 'Popular products', all_title: 'All products',
     remove: 'Remove', sugg_all: (q) => 'See all results for “' + q + '”', no_match: 'No matches', sugg_h: 'Suggestions', cat_h: 'Categories', prod_h: 'Products', cat_pill: 'Category: ', oos: 'Out of stock', prev_img: 'Previous image', next_img: 'Next image', close: 'Close', add: 'Add to cart', see_site: 'View on fredrikoglouisa.no', cart: 'Cart', cart_empty: 'Your cart is empty.',
     fewer: 'Fewer', more: 'More', sum: 'Total', cart_note: 'Demo: the cart is only stored on this device. Payment is made at fredrikoglouisa.no.',
-    checkout: 'Complete at fredrikoglouisa.no', ptr_go: 'Release to refresh', ptr: 'Pull to refresh', fav_save: 'Save to favorites',
+    checkout: 'Complete at fredrikoglouisa.no', fav_save: 'Save to favorites',
     mer: 'More', favorites: 'Favorites', fav_count: (n) => n + (n === 1 ? ' product' : ' products'), fav_empty: 'No favorites yet',
     fav_empty_sub: 'Tap the heart on a product to save it here.', back: 'Back',
     language: 'Language', info: 'Information', data: 'Data', clear: 'Clear saved data',
@@ -1112,27 +1112,6 @@ function renderMer() {
     if (y <= 0 || document.activeElement === $('#q')) off = 0;
     tools.style.transform = off ? 'translate3d(0,' + (-off) + 'px,0)' : '';
   }, { passive: true });
-})();
-
-/* ---------- pull to refresh ---------- */
-(function () {
-  const sc = $('#scroller'), ptr = $('#ptr');
-  let y0 = null, dist = 0;
-  sc.addEventListener('touchstart', (e) => { y0 = sc.scrollTop <= 0 ? e.touches[0].clientY : null; dist = 0; }, { passive: true });
-  sc.addEventListener('touchmove', (e) => {
-    if (y0 == null) return;
-    dist = e.touches[0].clientY - y0;
-    if (dist > 0 && sc.scrollTop <= 0) {
-      ptr.style.height = Math.min(dist / 2, 60) + 'px';
-      ptr.textContent = dist > 120 ? t('ptr_go') : t('ptr');
-    }
-  }, { passive: true });
-  sc.addEventListener('touchend', () => {
-    const go = y0 != null && dist > 120;
-    y0 = null; dist = 0;
-    ptr.style.height = '0'; ptr.textContent = '';
-    if (go) load();
-  });
 })();
 
 /* ---------- scroll infini ---------- */
