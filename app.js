@@ -18,6 +18,7 @@ const TABS = [
 const FILTERS = [['all', 'Alle'], ['new', 'Nyheter'], ['sale', 'Tilbud']];
 const HEART = 'M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z';
 const CLOSE = 'M6 6l12 12 M18 6L6 18';
+const CARTP = 'M3 4h2.5l2.2 10.5h10.3l2-7.5H6.4 M9.5 19h.01 M16.5 19h.01';
 const NS = 'http://www.w3.org/2000/svg';
 
 /* ---------- utilitaires ---------- */
@@ -290,12 +291,49 @@ $('#search').addEventListener('submit', (e) => {
 let sheetEl = null;
 function openSheet(content) {
   closeSheet(true);
-  const wrap = h('div', { class: 'wrap' },
-    h('div', { class: 'backdrop', onclick: () => closeSheet() }),
-    h('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'true' }, h('div', { class: 'grab' }, h('i')), content));
+  const grab = h('div', { class: 'grab' }, h('i'));
+  const sheet = h('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'true' }, grab, content);
+  const backdrop = h('div', { class: 'backdrop', onclick: () => closeSheet() });
+  const wrap = h('div', { class: 'wrap' }, backdrop, sheet);
   $('#layer').append(wrap);
   sheetEl = wrap;
+  enableDrag(wrap, sheet, backdrop, grab);
   requestAnimationFrame(() => requestAnimationFrame(() => wrap.classList.add('show')));
+}
+/* tirer la pastille vers le bas pour fermer la feuille */
+function enableDrag(wrap, sheet, backdrop, grab) {
+  let y0 = 0, t0 = 0, dy = 0, drag = false, lastY = 0, lastT = 0, v = 0;
+  grab.addEventListener('pointerdown', (e) => {
+    drag = true; y0 = lastY = e.clientY; t0 = lastT = e.timeStamp; dy = 0; v = 0;
+    grab.setPointerCapture(e.pointerId);
+    sheet.style.transition = 'none';
+    backdrop.style.transition = 'none';
+  });
+  grab.addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    dy = Math.max(0, e.clientY - y0);
+    const dt = e.timeStamp - lastT;
+    if (dt > 0) v = (e.clientY - lastY) / dt;
+    lastY = e.clientY; lastT = e.timeStamp;
+    sheet.style.transform = 'translateY(' + dy + 'px)';
+    backdrop.style.opacity = String(Math.max(0, 1 - dy / sheet.offsetHeight));
+  });
+  const end = () => {
+    if (!drag) return;
+    drag = false;
+    sheet.style.transition = 'transform .24s ease';
+    backdrop.style.transition = 'opacity .24s';
+    if (dy > Math.min(110, sheet.offsetHeight * 0.15) || (v > 0.6 && dy > 30)) {
+      sheet.style.transform = 'translateY(100%)';
+      backdrop.style.opacity = '0';
+      closeSheet();
+    } else {
+      sheet.style.transform = '';
+      backdrop.style.opacity = '';
+    }
+  };
+  grab.addEventListener('pointerup', end);
+  grab.addEventListener('pointercancel', end);
 }
 function closeSheet(now) {
   if (!sheetEl) return;
@@ -314,16 +352,23 @@ function openProduct(p) {
   }) : [];
   const chipBox = h('div', { class: 'chips' }, chips);
   const imgs = p.gallery.length ? p.gallery : (p.img ? [p.img] : []);
-  const add = h('button', { class: 'cta' }, 'Legg i handlekurv');
+  const countOf = () => cart.filter((l) => l.key.startsWith(p.id + '|')).reduce((n, l) => n + l.qty, 0);
+  const cnt = h('span', { class: 'cnt' });
+  const showCount = () => { const n = countOf(); cnt.textContent = n; cnt.hidden = !n; };
+  const fx = h('span', { class: 'fx', 'aria-hidden': 'true' }, h('i', { class: 'bar' }), h('i', { class: 'dot' }), h('span', { class: 'bk' }, icon(CARTP, 22, 1.6)));
+  const add = h('button', { class: 'cta' }, h('span', { class: 'lbl' }, 'Legg i handlekurv'), cnt, fx);
+  showCount();
+  let running = null;
   add.addEventListener('click', () => {
     addToCart(p, shade);
-    add.textContent = 'Lagt i handlekurven';
-    add.classList.add('done');
-    setTimeout(() => { add.textContent = 'Legg i handlekurv'; add.classList.remove('done'); }, 1600);
+    showCount();
+    if (running) return;
+    add.classList.add('run');
+    running = setTimeout(() => { add.classList.remove('run'); running = null; cnt.classList.remove('pop'); void cnt.offsetWidth; cnt.classList.add('pop'); }, 1900);
   });
   openSheet([
     h('div', { class: 'sbody' },
-      h('div', { class: 'gwrap' }, h('div', { class: 'gallery' }, imgs.map((src) => h('img', { src, alt: p.name, onerror: (e) => e.target.remove() }))), closeBtn()),
+      h('div', { class: 'gwrap' }, h('div', { class: 'gallery' }, imgs.map((src) => h('img', { src, alt: p.name, onerror: (e) => e.target.remove() })))),
       h('div', { class: 'info' }, h('div', { class: 'brand' }, p.brand), h('h1', { class: 'title' }, p.name), priceEl(p)),
       chips.length ? h('div', { class: 'info' }, h('div', { class: 'lbl' }, p.shadeLabel === 'nyanser' ? 'Nyanse' : 'Variant'), chipBox) : null,
       p.paras && p.paras.length ? h('div', { class: 'desc' }, p.paras.map((t) => h('p', null, t))) : (p.desc ? h('div', { class: 'desc' }, p.desc) : null),

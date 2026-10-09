@@ -64,7 +64,7 @@ nav button.on span{font-weight:600}
 .sheet{position:fixed;left:0;right:0;bottom:0;margin:0 auto;max-width:560px;height:92vh;height:92dvh;background:#fff;border-radius:20px 20px 0 0;display:flex;flex-direction:column;overflow:hidden;transform:translateY(100%);transition:transform .26s ease;z-index:11}
 .show .backdrop{opacity:1}
 .show .sheet{transform:none}
-.grab{display:flex;justify-content:center;padding:10px 0;flex:none}
+.grab{display:flex;justify-content:center;padding:12px 0 14px;flex:none;touch-action:none;cursor:grab}
 .grab i{width:40px;height:4px;border-radius:2px;background:var(--line2)}
 .sbody{flex:1;overflow-y:auto;overscroll-behavior:contain;padding-bottom:12px}
 .gallery{position:relative;height:300px;background:var(--ph);display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
@@ -86,7 +86,25 @@ nav button.on span{font-weight:600}
 .site{display:inline-block;margin:14px 16px 0;font-size:13px;color:var(--ink)}
 .actions{flex:none;padding:12px 16px calc(env(safe-area-inset-bottom) + 16px);display:flex;gap:10px;border-top:1px solid var(--line);background:#fff}
 .cta{flex:1;height:52px;border:0;background:var(--ink);color:#fff;font-size:15px;font-weight:500;letter-spacing:.02em;display:flex;align-items:center;justify-content:center;text-decoration:none}
-.cta.done{background:#fff;color:var(--ink);border:1px solid var(--ink)}
+.cta{position:relative;overflow:hidden;gap:10px}
+.cta .lbl{transition:opacity .15s}
+.cta .cnt{min-width:22px;height:22px;box-sizing:border-box;border:1.5px solid currentColor;border-radius:11px;font-size:12px;font-weight:500;line-height:19px;text-align:center;padding:0 4px}
+.cta .cnt[hidden]{display:none}
+.cta .cnt.pop{animation:pop .35s ease}
+@keyframes pop{0%{transform:scale(.4)}60%{transform:scale(1.25)}100%{transform:scale(1)}}
+.cta.run{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.cta.run .lbl,.cta.run .cnt{opacity:0}
+.fx{position:absolute;inset:0;pointer-events:none;display:none}
+.cta.run .fx{display:block}
+.fx i,.fx .bk{position:absolute}
+.fx .bar{left:0;top:50%;height:3px;margin-top:-1.5px;width:0;background:var(--ink);animation:bar 1.9s linear forwards}
+.fx .dot{left:50%;top:50%;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:var(--ink);opacity:0;animation:dot 1.9s linear forwards}
+.fx .bk{left:50%;top:27px;margin-left:-11px;opacity:0;animation:bk 1.9s ease forwards}
+.fx .bk svg{display:block;stroke:var(--ink);stroke-linecap:round;stroke-linejoin:round}
+@keyframes bar{0%{width:0;left:0;height:3px;margin-top:-1.5px;border-radius:0;opacity:1}30%{width:50%;left:0;height:3px;margin-top:-1.5px;border-radius:0;opacity:1}44%{width:10px;left:calc(50% - 5px);height:10px;margin-top:-5px;border-radius:5px;opacity:1}44.1%,100%{width:10px;left:calc(50% - 5px);height:10px;margin-top:-5px;opacity:0}}
+@keyframes dot{0%,44%{opacity:0;transform:translateY(0) scale(1)}44.1%{opacity:1;transform:translateY(0) scale(1);animation-timing-function:cubic-bezier(.5,0,1,.6)}62%{opacity:1;transform:translateY(15px) scale(.9)}68%,100%{opacity:0;transform:translateY(17px) scale(.5)}}
+@keyframes bk{0%,36%{opacity:0;transform:translateY(6px) scale(1)}46%{opacity:1;transform:none}64%{opacity:1;transform:scale(1)}69%{opacity:1;transform:scale(1.18)}76%{opacity:1;transform:scale(1)}90%,100%{opacity:0;transform:translateY(-4px)}}
+@media (prefers-reduced-motion:reduce){.cta.run .fx{display:none}.cta.run .lbl,.cta.run .cnt{opacity:1}}
 .sq{width:52px;height:52px;border:1px solid var(--ink);background:#fff;display:flex;align-items:center;justify-content:center;padding:0}
 .sq svg{fill:none;stroke:var(--ink)}
 .sq.on svg{fill:var(--ink)}
