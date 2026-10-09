@@ -1,5 +1,5 @@
 // Coquille de l'app seulement. Les produits ne sont jamais mis en cache ici, ils viennent du réseau à chaque ouverture.
-const CACHE = 'fl-shell-v10';
+const CACHE = 'fl-shell-v11';
 const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-180.png'];
 
 self.addEventListener('install', (e) => {
