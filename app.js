@@ -827,8 +827,8 @@ function updFab() {
   const n = nFilters();
   const bf = $('#fbFilter'), bs = $('#fbSort');
   bf.setAttribute('aria-label', t('filter')); bs.setAttribute('aria-label', t('sort'));
-  bf.replaceChildren(icon(FILT, 22, 1.6), h('span', { class: 'nb', hidden: !n }, String(n)));
-  bs.replaceChildren(icon(SORTI, 22, 1.6), state.sort !== 'date' ? h('i', { class: 'dt' }) : null);
+  bf.replaceChildren(icon(FILT, 18, 1.5), h('span', { class: 'nb', hidden: !n }, String(n)));
+  bs.replaceChildren(icon(SORTI, 18, 1.5), state.sort !== 'date' ? h('i', { class: 'dt' }) : document.createDocumentFragment());
 }
 $('#fbFilter').addEventListener('click', () => openFilter());
 $('#fbSort').addEventListener('click', () => openSort());
@@ -877,7 +877,7 @@ function openFilter() {
     body.replaceChildren(sheetHead(t('filter')),
       h('div', { class: 'fsec' }, stockRow),
       h('div', { class: 'fsec' }, h('h3', {}, t('price')), h('div', { class: 'prange' }, mk('min', t('price_from')), mk('max', t('price_to')))),
-      brands.length ? h('div', { class: 'fsec' }, h('h3', {}, t('brands')), brands.length > 10 ? bsearch : null, listBox) : null);
+      brands.length ? h('div', { class: 'fsec' }, h('h3', {}, t('brands')), brands.length > 10 ? bsearch : null, listBox) : document.createDocumentFragment());
     drawBrands();
   };
   const apply = h('button', { class: 'cta', onclick: () => {
