@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#ffffff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="F&amp;L">
+<title>Fredrik &amp; Louisa</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Hanken+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="logo">FREDRIK &amp; LOUISA</div>
+    <div class="bar">
+      <form id="search" role="search">
+        <input id="q" type="search" placeholder="Søk på produkt eller merke" enterkeyhint="search" autocomplete="off" autocapitalize="off" aria-label="Søk">
+        <button type="submit" aria-label="Søk">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14z M20 20l-4-4"/></svg>
+        </button>
+      </form>
+      <button id="cartBtn" class="round" aria-label="Handlekurv">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#1a1a1a" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1 12H6z M9 8V7a3 3 0 0 1 6 0v1"/></svg>
+        <span id="cartCount" hidden></span>
+      </button>
+    </div>
+  </header>
+  <div id="pills" class="pills"></div>
+  <div id="filters" class="filters"></div>
+  <main id="scroller">
+    <div id="ptr"></div>
+    <div id="status"></div>
+    <div id="grid" class="grid"></div>
+    <div id="more"></div>
+  </main>
+  <nav id="tabs" aria-label="Kategorier"></nav>
+</div>
+<div id="layer"></div>
+<script src="app.js"></script>
+</body>
+</html>
