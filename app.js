@@ -16,6 +16,7 @@ const TABS = [
   { key: 'mer', label: 'Mer', icon: 'M5 12a1.2 1.2 0 1 0 .01 0 M12 12a1.2 1.2 0 1 0 .01 0 M19 12a1.2 1.2 0 1 0 .01 0' }
 ];
 const VERSION = 'Demo 1.1';
+const BUILD = 'b34';
 const SORTS = { date: ['date', 'desc', 'sort_new'], popularity: ['popularity', 'desc', 'sort_pop'], price_asc: ['price', 'asc', 'sort_plow'], price_desc: ['price', 'desc', 'sort_phigh'] };
 const MERKE_ATTR = 4; // attribut « Merke » (marque) de la boutique
 const FILTERS = [['all', 'all'], ['new', 'f_new'], ['sale', 'f_sale']];
@@ -1111,7 +1112,7 @@ function renderMer() {
     h('section', { class: 'msec' },
       h('h2', {}, t('data')),
       h('div', { class: 'mlist' }, row(t('clear'), clearData, 'danger'))),
-    h('p', { class: 'mfoot' }, h('b', {}, 'Fredrik & Louisa'), t('unofficial') + ' · ' + VERSION));
+    h('p', { class: 'mfoot' }, h('b', {}, 'Fredrik & Louisa'), t('unofficial') + ' · ' + VERSION + ' · ' + BUILD));
 }
 
 /* ---------- en-tête : recherche et filtres se cachent en descendant, reviennent en remontant ---------- */
@@ -1143,5 +1144,15 @@ if ('IntersectionObserver' in window) {
   load();
 })();
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+  /* mise à jour automatique : on cherche une nouvelle version à chaque retour dans l'app, et on recharge dès qu'elle prend la main */
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (!hadController || reloaded) return; reloaded = true; location.reload(); });
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').then((reg) => {
+      const check = () => { reg.update().catch(() => {}); };
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') check(); });
+      setInterval(check, 300000);
+    }).catch(() => {});
+  });
 }
