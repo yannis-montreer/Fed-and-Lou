@@ -312,7 +312,7 @@ async function load(opts) {
     const cat = state.sub || catId();
     if (!cat) { state.loading = false; showError(); return; }
     params.category = cat;
-    params.orderby = 'popularity';
+    params.orderby = 'date';
     params.order = 'desc';
     if (state.filter === 'new') params.tag = NEW_TAG;
     if (state.filter === 'sale') params.on_sale = 'true';
