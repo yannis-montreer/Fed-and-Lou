@@ -588,8 +588,8 @@ async function sampleColor(url) {
 document.addEventListener('touchmove', (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
 
 /* ---------- carrousel : un geste horizontal bloque le défilement vertical, et inversement ---------- */
-function lockAxis(el, vert) {
-  let x0 = 0, y0 = 0, axis = null, vs = null, snapT = 0;
+function lockAxis(el, vert, step) {
+  let x0 = 0, y0 = 0, axis = null, vs = null, snapT = 0, stepLock = false;
   const release = () => {
     if (vs) vs.style.overflowY = '';
     el.style.overflowX = '';
@@ -613,6 +613,11 @@ function lockAxis(el, vert) {
     const ax = Math.abs(e.deltaX), ay = Math.abs(e.deltaY);
     if (!ax && !ay) return;
     e.preventDefault();
+    if (step && ax > ay) {
+      /* galerie : une image à la fois, même avec un long geste */
+      if (!stepLock) { stepLock = true; el.scrollBy({ left: Math.sign(e.deltaX) * el.clientWidth, behavior: 'smooth' }); setTimeout(() => { stepLock = false; }, 500); }
+      return;
+    }
     el.style.scrollSnapType = 'none'; clearTimeout(snapT); snapT = setTimeout(() => { el.style.scrollSnapType = ''; }, 160);
     if (ax > ay) el.scrollLeft += e.deltaX;
     else { const vs = typeof vert === 'function' ? vert() : vert; if (vs) vs.scrollTop += e.deltaY; }
@@ -697,7 +702,7 @@ function openProduct(p) {
     next.hidden = max < 4 || gal.scrollLeft > max - 4;
   };
   gal.addEventListener('scroll', updArrows, { passive: true });
-  lockAxis(gal, () => gal.closest('.sbody'));
+  lockAxis(gal, () => gal.closest('.sbody'), true);
   enablePinch(gal);
   const cnt = h('span', { class: 'cnt' });
   const showCount = () => {
