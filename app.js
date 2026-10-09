@@ -41,6 +41,7 @@ const I18N = {
     offline: 'Viser lagrede produkter. Ingen kontakt med fredrikoglouisa.no.', err: 'Kunne ikke hente produkter.',
     filter: 'Filter', sort: 'Sorter', brands: 'Merker', price: 'Pris', price_from: 'Fra kr', price_to: 'Til kr', instock_only: 'Kun på lager', reset: 'Nullstill', show_results: 'Vis resultater',
     sort_new: 'Nyeste', sort_pop: 'Populære', sort_plow: 'Pris: lav til høy', sort_phigh: 'Pris: høy til lav', brand_search: 'Søk etter merke', filter_err: 'Kunne ikke hente filtre.',
+    pop_title: 'Populære produkter', all_title: 'Alle produkter',
     oos: 'Utsolgt', prev_img: 'Forrige bilde', next_img: 'Neste bilde', close: 'Lukk', add: 'Legg i handlekurv', see_site: 'Se på fredrikoglouisa.no', cart: 'Handlekurv', cart_empty: 'Handlekurven er tom.',
     fewer: 'Færre', more: 'Flere', sum: 'Sum', cart_note: 'Demo: handlekurven lagres bare på denne enheten. Betalingen gjøres hos fredrikoglouisa.no.',
     checkout: 'Fullfør på fredrikoglouisa.no', ptr_go: 'Slipp for å oppdatere', ptr: 'Dra for å oppdatere', fav_save: 'Lagre i favoritter',
@@ -73,6 +74,7 @@ const I18N = {
     offline: 'Showing saved products. No connection to fredrikoglouisa.no.', err: "Couldn't load products.",
     filter: 'Filter', sort: 'Sort', brands: 'Brands', price: 'Price', price_from: 'From kr', price_to: 'To kr', instock_only: 'In stock only', reset: 'Reset', show_results: 'Show results',
     sort_new: 'Newest', sort_pop: 'Most popular', sort_plow: 'Price: low to high', sort_phigh: 'Price: high to low', brand_search: 'Search brand', filter_err: "Couldn't load filters.",
+    pop_title: 'Popular products', all_title: 'All products',
     oos: 'Out of stock', prev_img: 'Previous image', next_img: 'Next image', close: 'Close', add: 'Add to cart', see_site: 'View on fredrikoglouisa.no', cart: 'Cart', cart_empty: 'Your cart is empty.',
     fewer: 'Fewer', more: 'More', sum: 'Total', cart_note: 'Demo: the cart is only stored on this device. Payment is made at fredrikoglouisa.no.',
     checkout: 'Complete at fredrikoglouisa.no', ptr_go: 'Release to refresh', ptr: 'Pull to refresh', fav_save: 'Save to favorites',
@@ -275,6 +277,25 @@ function setStatus(msg, retry) {
   if (msg && retry) s.append(h('button', { onclick: retry }, t('retry')));
 }
 
+/* ---------- rangée « Populære produkter » (comme sur le site), seulement sans recherche, tri ni filtre ---------- */
+let popTok = 0;
+async function updPop(cat) {
+  const sec = $('#pop'), allT = $('#allT'), tok = ++popTok;
+  const hide = () => { sec.hidden = true; allT.hidden = true; };
+  if (!cat || state.query || state.filter !== 'all' || nFilters() || state.sort !== 'date') { hide(); return; }
+  $('#popT').textContent = t('pop_title'); allT.textContent = t('all_title');
+  sec.hidden = false; allT.hidden = false;
+  $('#popRow').replaceChildren(...Array.from({ length: 4 }, () => h('div', { class: 'card sk' }, h('div', { class: 'ph' }), h('div', {}, h('i'), h('i')))));
+  $('#popRow').scrollLeft = 0;
+  try {
+    const { data } = await api('/products', { category: cat, orderby: 'popularity', order: 'desc', min_price: 1, per_page: 16, _fields: FIELDS });
+    if (tok !== popTok) return;
+    const items = data.map(mapProduct).filter((p) => p.price > 0 && p.img).slice(0, 10);
+    if (!items.length) { hide(); return; }
+    $('#popRow').replaceChildren(...items.map(card));
+  } catch (e) { if (tok === popTok) hide(); }
+}
+
 /* ---------- chargement ---------- */
 async function loadCats() {
   const cached = store.get('cats', null);
@@ -315,11 +336,13 @@ async function load(opts) {
   let key;
   if (state.query) {
     params.search = state.query;
+    if (!append) updPop(null);
     key = 'q.s.' + state.query.toLowerCase();
   } else {
     const cat = state.sub || catId();
     if (!cat) { state.loading = false; showError(); return; }
     params.category = cat;
+    if (!append) updPop(cat);
     const so = SORTS[state.sort] || SORTS.date;
     params.orderby = so[0];
     params.order = so[1];
@@ -857,6 +880,7 @@ function applyLang() {
   $('#tabs').setAttribute('aria-label', t('categories'));
   renderTabs(); renderFilters(); renderPills();
   if (state.items.length) { $('#grid').replaceChildren(); addCards(state.items); }
+  $('#popT').textContent = t('pop_title'); $('#allT').textContent = t('all_title');
   if (state.tab === 'mer') renderMer();
 }
 function renderMer() {
