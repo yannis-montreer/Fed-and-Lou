@@ -589,7 +589,7 @@ document.addEventListener('touchmove', (e) => { if (e.touches.length > 1) e.prev
 
 /* ---------- carrousel : un geste horizontal bloque le défilement vertical, et inversement ---------- */
 function lockAxis(el, vert) {
-  let x0 = 0, y0 = 0, axis = null, vs = null;
+  let x0 = 0, y0 = 0, axis = null, vs = null, snapT = 0;
   const release = () => {
     if (vs) vs.style.overflowY = '';
     el.style.overflowX = '';
@@ -608,6 +608,15 @@ function lockAxis(el, vert) {
   }, { passive: true });
   el.addEventListener('touchend', release);
   el.addEventListener('touchcancel', release);
+  /* souris / pavé tactile : on prend l'axe dominant du geste et on fait défiler à la main, un seul axe à la fois */
+  el.addEventListener('wheel', (e) => {
+    const ax = Math.abs(e.deltaX), ay = Math.abs(e.deltaY);
+    if (!ax && !ay) return;
+    e.preventDefault();
+    el.style.scrollSnapType = 'none'; clearTimeout(snapT); snapT = setTimeout(() => { el.style.scrollSnapType = ''; }, 160);
+    if (ax > ay) el.scrollLeft += e.deltaX;
+    else { const vs = typeof vert === 'function' ? vert() : vert; if (vs) vs.scrollTop += e.deltaY; }
+  }, { passive: false });
 }
 lockAxis($('#popRow'), () => $('#scroller'));
 
