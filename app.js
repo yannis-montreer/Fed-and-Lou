@@ -5,7 +5,7 @@ const API = 'https://lively-leaf-cd06.yannis-montreer.workers.dev';
 const SITE = 'https://fredrikoglouisa.no/';
 const NEW_TAG = 9764; // tag "Nyheter"
 const PER_PAGE = 24;
-const FIELDS = 'id,name,permalink,prices,on_sale,images,short_description,attributes,variations,extensions,brands,tags';
+const FIELDS = 'id,name,permalink,prices,on_sale,images,short_description,description,attributes,variations,extensions,brands,tags';
 
 const TABS = [
   { key: 'makeup', label: 'Makeup', match: 'makeup', icon: 'M8 21h8v-6H8z M9.5 15V9h5v6 M9.5 9l5-5v5' },
@@ -58,6 +58,13 @@ function text(s) {
   if (!s) return '';
   return (new DOMParser().parseFromString(String(s), 'text/html').documentElement.textContent || '').replace(/\s+/g, ' ').trim();
 }
+function paras(s) {
+  if (!s) return [];
+  const doc = new DOMParser().parseFromString(String(s), 'text/html');
+  const out = [...doc.querySelectorAll('p, li')].map((e) => (e.textContent || '').replace(/\s+/g, ' ').trim()).filter(Boolean);
+  const all = (doc.body.textContent || '').replace(/\s+/g, ' ').trim();
+  return out.length ? out : (all ? [all] : []);
+}
 const fmt = new Intl.NumberFormat('nb-NO', { maximumFractionDigits: 0 });
 const kr = (n) => fmt.format(Math.round(n)).replace(/[  ]/g, ' ') + ' kr';
 
@@ -96,6 +103,7 @@ function mapProduct(p) {
     gallery: imgs.slice(0, 5).map((i) => i.src),
     url: p.permalink,
     desc: text(p.short_description).slice(0, 360),
+    paras: paras(p.description).slice(0, 8),
     isNew: (p.tags || []).some((t) => t.id === NEW_TAG),
     shades,
     shadeLabel: attr && /farge|nyanse|color|colour/i.test(attr.name || '') ? 'nyanser' : 'varianter'
@@ -225,14 +233,15 @@ async function load(opts) {
   try {
     const { data, pages } = await api('/products', params);
     if (my !== state.token) return;
-    const items = data.map(mapProduct);
+    const items = data.map(mapProduct).filter((p) => p.price > 0 && p.img);
     if (!append) { $('#grid').replaceChildren(); store.set(key, items); }
     state.items.push(...items);
     state.done = pages ? state.page >= pages : items.length < PER_PAGE;
     state.page++;
-    if (!state.items.length) $('#grid').replaceChildren(h('div', { class: 'empty' }, 'Ingen produkter funnet'));
+    if (!state.items.length && state.done) $('#grid').replaceChildren(h('div', { class: 'empty' }, 'Ingen produkter funnet'));
     else addCards(items);
     setStatus('');
+    if (!items.length && !state.done) { state.loading = false; load({ append: true }); return; }
   } catch (e) {
     if (my !== state.token) return;
     if (append) { setStatus('Kunne ikke hente flere produkter.', () => load({ append: true })); }
@@ -317,7 +326,7 @@ function openProduct(p) {
       h('div', { class: 'gwrap' }, h('div', { class: 'gallery' }, imgs.map((src) => h('img', { src, alt: p.name, onerror: (e) => e.target.remove() }))), closeBtn()),
       h('div', { class: 'info' }, h('div', { class: 'brand' }, p.brand), h('h1', { class: 'title' }, p.name), priceEl(p)),
       chips.length ? h('div', { class: 'info' }, h('div', { class: 'lbl' }, p.shadeLabel === 'nyanser' ? 'Nyanse' : 'Variant'), chipBox) : null,
-      p.desc ? h('div', { class: 'desc' }, p.desc) : null,
+      p.paras && p.paras.length ? h('div', { class: 'desc' }, p.paras.map((t) => h('p', null, t))) : (p.desc ? h('div', { class: 'desc' }, p.desc) : null),
       h('a', { class: 'site', href: p.url, target: '_blank', rel: 'noopener' }, 'Se på fredrikoglouisa.no')),
     h('div', { class: 'actions' }, add, heartBtn(p, 'sq'))
   ]);
