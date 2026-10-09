@@ -16,7 +16,7 @@ const TABS = [
   { key: 'mer', label: 'Mer', icon: 'M5 12a1.2 1.2 0 1 0 .01 0 M12 12a1.2 1.2 0 1 0 .01 0 M19 12a1.2 1.2 0 1 0 .01 0' }
 ];
 const VERSION = 'Demo 1.1';
-const BUILD = 'b40';
+const BUILD = 'b41';
 const SORTS = { date: ['date', 'desc', 'sort_new'], popularity: ['popularity', 'desc', 'sort_pop'], price_asc: ['price', 'asc', 'sort_plow'], price_desc: ['price', 'desc', 'sort_phigh'] };
 const MERKE_ATTR = 4; // attribut « Merke » (marque) de la boutique
 const FILTERS = [['all', 'all'], ['new', 'f_new'], ['sale', 'f_sale']];
@@ -1337,6 +1337,30 @@ if ('IntersectionObserver' in window) {
   loadSubs();
   load();
 })();
+/* contrôle de version indépendant du service worker : si la version publiée n'est pas celle qui tourne, on vide les caches et on recharge (une fois par minute au plus) */
+async function latestBuild() {
+  try {
+    const r = await fetch('app.js?v=' + Date.now(), { cache: 'no-store' });
+    const m = (await r.text()).match(/const BUILD = '([^']+)'/);
+    return m ? m[1] : null;
+  } catch (e) { return null; }
+}
+async function checkUpdate() {
+  const b = await latestBuild();
+  if (!b || b === BUILD) return;
+  let last = 0;
+  try { last = Number(sessionStorage.getItem('fl.upd') || 0); } catch (e) { /* ignorer */ }
+  if (Date.now() - last < 60000) return;
+  try { sessionStorage.setItem('fl.upd', String(Date.now())); } catch (e) { /* ignorer */ }
+  try {
+    if (navigator.serviceWorker) for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister();
+    if (window.caches) for (const k of await caches.keys()) await caches.delete(k);
+  } catch (e) { /* ignorer */ }
+  location.reload();
+}
+setTimeout(checkUpdate, 2500);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkUpdate(); });
+
 if ('serviceWorker' in navigator) {
   /* mise à jour automatique : on cherche une nouvelle version à chaque retour dans l'app, et on recharge dès qu'elle prend la main */
   const hadController = !!navigator.serviceWorker.controller;
