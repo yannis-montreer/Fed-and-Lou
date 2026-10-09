@@ -587,6 +587,30 @@ async function sampleColor(url) {
 ['gesturestart', 'gesturechange', 'gestureend'].forEach((ev) => document.addEventListener(ev, (e) => e.preventDefault(), { passive: false }));
 document.addEventListener('touchmove', (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
 
+/* ---------- carrousel : un geste horizontal bloque le défilement vertical, et inversement ---------- */
+function lockAxis(el, vert) {
+  let x0 = 0, y0 = 0, axis = null, vs = null;
+  const release = () => {
+    if (vs) vs.style.overflowY = '';
+    el.style.overflowX = '';
+    axis = null; vs = null;
+  };
+  el.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) return;
+    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; axis = null;
+  }, { passive: true });
+  el.addEventListener('touchmove', (e) => {
+    if (axis || e.touches.length !== 1) return;
+    const dx = Math.abs(e.touches[0].clientX - x0), dy = Math.abs(e.touches[0].clientY - y0);
+    if (Math.max(dx, dy) < 6) return;
+    if (dx > dy) { axis = 'x'; vs = typeof vert === 'function' ? vert() : vert; if (vs) vs.style.overflowY = 'hidden'; }
+    else { axis = 'y'; el.style.overflowX = 'hidden'; }
+  }, { passive: true });
+  el.addEventListener('touchend', release);
+  el.addEventListener('touchcancel', release);
+}
+lockAxis($('#popRow'), () => $('#scroller'));
+
 function enablePinch(gal) {
   let pz = null;
   const dist = (a, b) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
@@ -633,7 +657,7 @@ function openProduct(p) {
   const chipEls = [];
   const chips = p.shades.length > 1 ? p.shades.slice(0, 40).map((sh, i) => {
     const n = h('span', { class: 'n', hidden: true });
-    const b = h('button', { class: 'chip' + (i === 0 ? ' on' : ''), onclick: () => { shade = sh; showCount(); showVariant(); showStock(); } }, sh, n);
+    const b = h('button', { class: 'chip' + (i === 0 ? ' on' : ''), title: sh, 'aria-label': sh, onclick: () => { shade = sh; showCount(); showVariant(); showStock(); } }, h('span', { class: 'lb' }, sh), n);
     chipEls.push({ b, n, sh, i });
     return b;
   }) : [];
@@ -664,6 +688,7 @@ function openProduct(p) {
     next.hidden = max < 4 || gal.scrollLeft > max - 4;
   };
   gal.addEventListener('scroll', updArrows, { passive: true });
+  lockAxis(gal, () => gal.closest('.sbody'));
   enablePinch(gal);
   const cnt = h('span', { class: 'cnt' });
   const showCount = () => {
@@ -718,7 +743,10 @@ function openProduct(p) {
         while (queue.length) {
           const c = queue.shift();
           const col = await sampleColor(v[p.slugs[c.i]].thumb);
-          if (col && c.b.isConnected) c.b.insertBefore(h('span', { class: 'sw', style: 'background:' + col }), c.b.firstChild);
+          if (col && c.b.isConnected) {
+            c.b.insertBefore(h('span', { class: 'sw', style: 'background:' + col }), c.b.firstChild);
+            if (/^[\d\s.,]+$/.test(c.sh)) c.b.classList.add('swonly');
+          }
           if (swatchOff) return;
         }
       };
