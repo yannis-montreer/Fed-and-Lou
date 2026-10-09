@@ -496,6 +496,16 @@ function loadVariants(p) {
   }
   return varCache.get(p.id);
 }
+const galCache = new Map();
+function loadGallery(p) {
+  if (!p.url || !p.vars || !p.vars.length) return Promise.resolve({});
+  if (!galCache.has(p.id)) {
+    galCache.set(p.id, fetch(API + '/_gallery?u=' + encodeURIComponent(p.url))
+      .then((r) => (r.ok ? r.json() : {}))
+      .catch(() => { galCache.delete(p.id); return {}; }));
+  }
+  return galCache.get(p.id);
+}
 const swCache = store.get('sw', {});
 let swatchOff = false;
 async function sampleColor(url) {
@@ -589,11 +599,13 @@ function openProduct(p) {
   const imgs = p.gallery.length ? p.gallery : (p.img ? [p.img] : []);
   const gal = h('div', { class: 'gallery' }, imgs.map((src) => h('img', { src, alt: p.name, onerror: (e) => e.target.remove() })));
   let variants = {};
+  let galleries = {};
   const slugOf = (sh) => (p.slugs || [])[p.shades.indexOf(sh)];
   const showVariant = () => {
     const vi = variants[slugOf(shade)];
-    const list = vi && vi.src ? [vi.src, ...imgs.slice(1).filter((x) => x !== vi.src)] : imgs;
-    if (gal.firstChild && gal.firstChild.getAttribute('src') === list[0]) return;
+    const gg = galleries[slugOf(shade)];
+    const list = gg && gg.length ? gg : (vi && vi.src ? [vi.src, ...imgs.slice(1).filter((x) => x !== vi.src)] : imgs);
+    if ([...gal.querySelectorAll('img')].map((i) => i.getAttribute('src')).join('|') === list.join('|')) return;
     gal.classList.add('swap');
     setTimeout(() => {
       gal.replaceChildren(...list.map((src) => h('img', { src, alt: p.name, onerror: (e) => e.target.remove() })));
@@ -653,6 +665,7 @@ function openProduct(p) {
   ]);
   requestAnimationFrame(() => requestAnimationFrame(updArrows));
   if (p.vars && p.vars.length) {
+    loadGallery(p).then((g) => { galleries = g; showVariant(); });
     loadVariants(p).then((v) => {
       variants = v;
       showVariant();
