@@ -322,3 +322,41 @@ nav button.on span{font-weight:600}
 .codone p{margin:0;font-size:14px;color:var(--mute)}
 .actions.col .cta,.actions.col .ghost{flex:none;width:100%;height:52px}
 .opt .vlogo{display:block;height:20px;width:auto}
+
+/* boutiques et stock */
+body.coOpen .backdrop{z-index:200}
+body.coOpen .sheet{z-index:201}
+.stkwrap{padding-top:10px}
+.stk{display:block}
+.stkb{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:0 12px;border:1px solid var(--line2);background:#fff;font-size:14px;text-align:left}
+.stkb span{flex:1;min-width:0}
+.stkb svg{flex:none;stroke:var(--mute)}
+.stkb.dim{color:var(--mute);border-color:var(--line)}
+.sd{flex:none;width:10px;height:10px;border-radius:50%;background:#bdb9b3}
+.sd.ok{background:#3e8e5b}
+.sd.low{background:#d69a2d}
+.sd.out{background:#bdb9b3}
+.sd.none{background:transparent;border:1px solid #bdb9b3}
+.stkhead{display:flex;flex-direction:column;gap:2px;padding:4px 0 10px;font-size:14px}
+.stkhead small{color:var(--mute)}
+.stlist{margin-top:10px}
+.strow{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:6px 0;border:0;border-bottom:1px solid var(--line);background:#fff;text-align:left}
+.strow .si2{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;font-size:14px}
+.strow .si2 small{color:var(--mute);font-size:12.5px;font-weight:300}
+.strow .km{flex:none;font-size:12.5px;color:var(--mute)}
+.strow svg{flex:none;stroke:var(--ink)}
+.strow.sel .si2 b{font-weight:600}
+.mstore{display:flex;align-items:center;gap:12px;padding:14px 0 4px}
+.mstore .ms1{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;font-size:14px}
+.mstore small{color:var(--mute)}
+.mstore .ghost{height:44px;padding:0 16px;flex:none}
+.mempty .ghost{margin-top:12px;height:46px}
+.costore{margin-top:8px;padding:12px 14px;border:1px solid var(--line)}
+.costhead{display:flex;flex-direction:column;gap:2px;font-size:14px}
+.costhead small{color:var(--mute)}
+.linkb{align-self:flex-start;margin-top:6px;padding:4px 0;border:0;background:none;font-size:13px;text-decoration:underline}
+.costk{margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.costk .cline{align-items:center}
+.costk .cl2{display:flex;align-items:center;gap:8px;min-width:0}
+.costk .cs2{flex:none;font-size:12.5px;color:var(--mute)}
+.costsum{display:block;margin-top:6px;color:var(--mute);font-size:12.5px;line-height:1.4}

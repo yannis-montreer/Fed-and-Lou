@@ -16,7 +16,7 @@ const TABS = [
   { key: 'mer', label: 'Mer', icon: 'M5 12a1.2 1.2 0 1 0 .01 0 M12 12a1.2 1.2 0 1 0 .01 0 M19 12a1.2 1.2 0 1 0 .01 0' }
 ];
 const VERSION = 'Demo 1.1';
-const BUILD = 'b41';
+const BUILD = 'b42';
 const SORTS = { date: ['date', 'desc', 'sort_new'], popularity: ['popularity', 'desc', 'sort_pop'], price_asc: ['price', 'asc', 'sort_plow'], price_desc: ['price', 'desc', 'sort_phigh'] };
 const MERKE_ATTR = 4; // attribut « Merke » (marque) de la boutique
 const FILTERS = [['all', 'all'], ['new', 'f_new'], ['sale', 'f_sale']];
@@ -52,6 +52,11 @@ const I18N = {
     co_address: 'Leveringsadresse', co_example: 'Eksempel (demo)', co_delivery: 'Levering', co_store: 'Hent i butikk', co_store_sub: 'Klar for henting innen 1–2 dager',
     co_std: 'Standard levering', co_std_sub: '1–4 dager · gratis over 1 000 kr', co_payment: 'Betaling', co_card: 'Betalingskort', co_summary: 'Oppsummering',
     co_pay: 'Betal', co_thanks: 'Takk for bestillingen!', co_order_no: 'Ordrenummer', co_continue: 'Fortsett å handle', co_done_note: 'Dette var en demo. Ingenting er bestilt eller belastet.', co_confirm_sub: 'En bekreftelse ville blitt sendt på e-post.',
+        my_store: 'Min butikk', st_pick: 'Velg butikk', st_change: 'Endre', st_none: 'Ingen butikk valgt', st_none_sub: 'Velg en butikk for å se lagerstatus og hente varer.',
+    st_search: 'Søk etter butikk', st_nearest: 'Nærmeste butikker', st_locating: 'Finner posisjon…', st_today: 'I dag', st_closed: 'Stengt',
+    stk_ok: 'På lager', stk_low: 'Få på lager', stk_out: 'Utilgjengelig', stk_pick: 'Velg butikk for å se lagerstatus', stk_loading: 'Henter lagerstatus…',
+    stk_unavail: 'Lagerstatus utilgjengelig', stk_upd: 'oppdatert', stk_title: 'Tilgjengelighet i butikk',
+    co_avail: (n, m) => n + ' av ' + m + ' varer er tilgjengelige i butikken.', co_pickup_warn: 'Noen varer er ikke tilgjengelige i valgt butikk (demo).',
     oos: 'Utsolgt', prev_img: 'Forrige bilde', next_img: 'Neste bilde', close: 'Lukk', add: 'Legg i handlekurv', see_site: 'Se på fredrikoglouisa.no', cart: 'Handlekurv', cart_empty: 'Handlekurven er tom.',
     fewer: 'Færre', more: 'Flere', sum: 'Sum', cart_note: 'Demo: handlekurven lagres bare på denne enheten. Betalingen gjøres hos fredrikoglouisa.no.',
     checkout: 'Fullfør på fredrikoglouisa.no', fav_save: 'Lagre i favoritter',
@@ -67,7 +72,7 @@ const I18N = {
       ['Personvern', [
         ['', 'Demoen har ingen brukerkonto, ingen sporing og ingen analyseverktøy.'],
         ['Lagret på enheten', 'Favoritter, handlekurv, språkvalg og sist viste produkter lagres bare på denne enheten, i nettleserens lokale lagring. Ingenting sendes videre. Du kan slette alt under «Tøm lagrede data».'],
-        ['Tredjeparter', 'Produktdata hentes via en mellomtjener hos Cloudflare, som bare videresender offentlige produktdata fra fredrikoglouisa.no. Cloudflare ser teknisk sett IP-adressen din. Det du skriver i søkefeltet sendes til søketjenesten Clerk.io, den samme som fredrikoglouisa.no bruker, som også ser IP-adressen din. Skrifttyper lastes fra Google Fonts, som også ser IP-adressen din.']]],
+        ['Tredjeparter', 'Produktdata hentes via en mellomtjener hos Cloudflare, som bare videresender offentlige produktdata fra fredrikoglouisa.no. Cloudflare ser teknisk sett IP-adressen din. Det du skriver i søkefeltet sendes til søketjenesten Clerk.io, den samme som fredrikoglouisa.no bruker, som også ser IP-adressen din. Skrifttyper lastes fra Google Fonts, som også ser IP-adressen din. Butikkliste og lagerstatus hentes fra fredrikoglouisa.no via mellomtjeneren. Posisjonen din brukes bare hvis du trykker «Nærmeste butikker», og den lagres eller sendes ikke.']]],
       ['Vilkår og juridisk info', [
         ['', 'Demoen er kun til visning. Handlekurven er lokal og brukes bare for å vise hvordan den kan fungere: ingen bestilling, ingen betaling og ingen kundedata. Kassen er en simulering: ingen kortopplysninger eller personopplysninger samles inn, og koden «DEMO10» og gavekortet «GAVE100» finnes bare i demoen.'],
         ['Kjøp', '«Fullfør på fredrikoglouisa.no» sender deg til den ordinære nettbutikken. Der skjer kjøpet på butikkens egne vilkår.'],
@@ -94,6 +99,11 @@ const I18N = {
     co_address: 'Delivery address', co_example: 'Example (demo)', co_delivery: 'Delivery', co_store: 'Pick up in store', co_store_sub: 'Ready for pickup within 1–2 days',
     co_std: 'Standard delivery', co_std_sub: '1–4 days · free over 1,000 kr', co_payment: 'Payment', co_card: 'Payment card', co_summary: 'Summary',
     co_pay: 'Pay', co_thanks: 'Thank you for your order!', co_order_no: 'Order number', co_continue: 'Continue shopping', co_done_note: 'This was a demo. Nothing has been ordered or charged.', co_confirm_sub: 'A confirmation would have been sent by e-mail.',
+        my_store: 'My store', st_pick: 'Choose store', st_change: 'Change', st_none: 'No store selected', st_none_sub: 'Choose a store to see stock and pick up items.',
+    st_search: 'Search store', st_nearest: 'Nearest stores', st_locating: 'Finding location…', st_today: 'Today', st_closed: 'Closed',
+    stk_ok: 'In stock', stk_low: 'Low stock', stk_out: 'Unavailable', stk_pick: 'Choose a store to see stock', stk_loading: 'Checking stock…',
+    stk_unavail: 'Stock status unavailable', stk_upd: 'updated', stk_title: 'Availability in stores',
+    co_avail: (n, m) => n + ' of ' + m + ' items are available at the store.', co_pickup_warn: 'Some items are not available at the chosen store (demo).',
     oos: 'Out of stock', prev_img: 'Previous image', next_img: 'Next image', close: 'Close', add: 'Add to cart', see_site: 'View on fredrikoglouisa.no', cart: 'Cart', cart_empty: 'Your cart is empty.',
     fewer: 'Fewer', more: 'More', sum: 'Total', cart_note: 'Demo: the cart is only stored on this device. Payment is made at fredrikoglouisa.no.',
     checkout: 'Complete at fredrikoglouisa.no', fav_save: 'Save to favorites',
@@ -109,7 +119,7 @@ const I18N = {
       ['Privacy', [
         ['', 'The demo has no user account, no tracking and no analytics tools.'],
         ['Stored on the device', 'Favorites, cart, language choice and recently viewed products are stored only on this device, in the browser\'s local storage. Nothing is sent on. You can delete everything under "Clear saved data".'],
-        ['Third parties', 'Product data is fetched through an intermediary server at Cloudflare, which only forwards public product data from fredrikoglouisa.no. Cloudflare technically sees your IP address. What you type in the search field is sent to the search service Clerk.io, the same one fredrikoglouisa.no uses, which also sees your IP address. Fonts are loaded from Google Fonts, which also sees your IP address.']]],
+        ['Third parties', 'Product data is fetched through an intermediary server at Cloudflare, which only forwards public product data from fredrikoglouisa.no. Cloudflare technically sees your IP address. What you type in the search field is sent to the search service Clerk.io, the same one fredrikoglouisa.no uses, which also sees your IP address. Fonts are loaded from Google Fonts, which also sees your IP address. The store list and stock status are fetched from fredrikoglouisa.no through the intermediary server. Your location is only used if you tap "Nearest stores", and it is neither stored nor sent.']]],
       ['Terms and legal information', [
         ['', 'The demo is for display only. The cart is local and only shows how it could work: no ordering, no payment and no customer data. The checkout is a simulation: no card details or personal data are collected, and the code "DEMO10" and the gift card "GAVE100" exist only in the demo.'],
         ['Purchases', '"Complete at fredrikoglouisa.no" takes you to the regular online store. Purchases there are made under the store\'s own terms.'],
@@ -665,8 +675,8 @@ window.addEventListener('popstate', () => {
     if (skipPop === 0 && pendingAfterPop) { const f = pendingAfterPop; pendingAfterPop = null; f(); }
     return;
   }
-  if (coEl) { coPop(); return; }
   if (sheetEl) { sheetPushed = false; closeSheet(); return; }
+  if (coEl) { coPop(); return; }
   if (searchPushed && state.tab !== 'mer') { searchPushed = false; exitSearch(); return; }
   sheetPushed = false;
   if (merPage) { merPage = null; if (state.tab === 'mer') { renderMer(); $('#mer').scrollTop = 0; } }
@@ -836,13 +846,13 @@ function enablePinch(gal) {
   gal.addEventListener('touchcancel', end);
 }
 
-function openProduct(p) {
-  let shade = p.shades.length ? p.shades[0] : '';
+function openProduct(p, startShade) {
+  let shade = startShade || (p.shades.length ? p.shades[0] : '');
   const countOf = (sh) => cart.filter((l) => l.key === p.id + '|' + sh).reduce((n, l) => n + l.qty, 0);
   const chipEls = [];
   const chips = p.shades.length > 1 ? p.shades.slice(0, 40).map((sh, i) => {
     const n = h('span', { class: 'n', hidden: true });
-    const b = h('button', { class: 'chip' + (i === 0 ? ' on' : ''), title: sh, 'aria-label': sh, onclick: () => { shade = sh; showCount(); showVariant(); showStock(); } }, h('span', { class: 'lb' }, sh), n);
+    const b = h('button', { class: 'chip' + (i === 0 ? ' on' : ''), title: sh, 'aria-label': sh, onclick: () => { shade = sh; showCount(); showVariant(); showStock(); showStk(); } }, h('span', { class: 'lb' }, sh), n);
     chipEls.push({ b, n, sh, i });
     return b;
   }) : [];
@@ -875,6 +885,27 @@ function openProduct(p) {
   gal.addEventListener('scroll', updArrows, { passive: true });
   lockAxis(gal, () => gal.closest('.sbody'), true);
   enablePinch(gal);
+  /* stock dans la boutique choisie */
+  const stk = h('div', { class: 'stk' });
+  let stkTok = 0;
+  const showStk = () => {
+    const my = ++stkTok;
+    if (!myStore) {
+      stk.replaceChildren(h('button', { class: 'stkb', type: 'button', onclick: () => { afterClose = () => openProduct(p, shade); openStorePicker(); } }, stkDot('none'), h('span', {}, t('stk_pick')), icon(CHEV, 16, 1.5)));
+      return;
+    }
+    stk.replaceChildren(h('div', { class: 'stkb dim' }, stkDot('none'), h('span', {}, t('stk_loading'))));
+    const q = stockIdOf(p, shade);
+    loadStock(q.id, q.kind).then((data) => {
+      if (my !== stkTok || !stk.isConnected) return;
+      if (!data) { stk.replaceChildren(h('div', { class: 'stkb dim' }, stkDot('none'), h('span', {}, t('stk_unavail')))); return; }
+      const e = stockOf(data, myStore);
+      const tm = e && /\d\d:\d\d/.test(e.at || '') ? ' · ' + t('stk_upd') + ' ' + e.at.match(/\d\d:\d\d/)[0] : '';
+      stk.replaceChildren(h('button', { class: 'stkb', type: 'button', onclick: () => { afterClose = () => openProduct(p, shade); openStoreStock(p, shade); } },
+        stkDot(stkCls(e)), h('span', {}, h('b', {}, stkTxt(e)), ' · ' + myStore.short + tm), icon(CHEV, 16, 1.5)));
+    });
+  };
+  storeListeners.push(() => { if (!stk.isConnected) return false; showStk(); });
   const cnt = h('span', { class: 'cnt' });
   const showCount = () => {
     const n = countOf(shade);
@@ -911,10 +942,12 @@ function openProduct(p) {
       h('div', { class: 'gwrap' }, gal, prev, next),
       h('div', { class: 'info' }, h('div', { class: 'brand' }, p.brand), h('h1', { class: 'title' }, p.name), priceEl(p)),
       chips.length ? h('div', { class: 'info' }, h('div', { class: 'lbl' }, p.shadeLabel === 'nyanser' ? t('shade') : t('variant')), chipBox) : null,
+      h('div', { class: 'info stkwrap' }, stk),
       p.paras && p.paras.length ? h('div', { class: 'desc' }, p.paras.map((t) => h('p', null, t))) : (p.desc ? h('div', { class: 'desc' }, p.desc) : null),
       h('a', { class: 'site', href: p.url, target: '_blank', rel: 'noopener' }, t('see_site'))),
     h('div', { class: 'actions' }, add, heartBtn(p, 'sq'))
   ]);
+  showStk();
   requestAnimationFrame(() => requestAnimationFrame(updArrows));
   if (p.vars && p.vars.length) {
     loadGallery(p).then((g) => { galleries = g; showVariant(); });
@@ -952,7 +985,7 @@ function addToCart(p, shade, img) {
   const key = p.id + '|' + shade;
   const line = cart.find((l) => l.key === key);
   if (line) line.qty++;
-  else cart.push({ key, name: p.name, brand: p.brand, img: img || p.img, price: p.price, shade, qty: 1, isColor: p.shadeLabel === 'nyanser', col: (img && swCache[img]) || null, prod: p });
+  else cart.push({ key, name: p.name, brand: p.brand, img: img || p.img, price: p.price, shade, qty: 1, isColor: p.shadeLabel === 'nyanser', col: (img && swCache[img]) || null, prod: p, vid: stockIdOf(p, shade).id, kind: stockIdOf(p, shade).kind });
   if (line && p) line.prod = p;
   saveCart();
 }
@@ -1109,12 +1142,14 @@ function openCheckout() {
     h('div', { class: 'cobody', id: 'coBody' }),
     h('div', { class: 'cofoot', id: 'coFoot' }));
   document.body.append(coEl);
+  document.body.classList.add('coOpen');
+  storeListeners.push(() => { if (!coEl) return false; coRender(); });
   coRender();
 }
 function closeCheckout() {
   if (!coEl) return;
   const n = coDepth, done = coDone;
-  coDepth = 0; coEl.remove(); coEl = null; coStep = 0;
+  coDepth = 0; coEl.remove(); coEl = null; coStep = 0; document.body.classList.remove('coOpen');
   const reopen = !done && cart.length;
   if (n > 0) {
     skipPop++;
@@ -1125,7 +1160,7 @@ function closeCheckout() {
 function coPop() {
   if (coStep === 3) { coDepth = 1; closeCheckout(); return; }
   if (coStep === 2) { coStep = 1; coDepth = 1; coRender(); return; }
-  coDepth = 0; coEl.remove(); coEl = null; coStep = 0;
+  coDepth = 0; coEl.remove(); coEl = null; coStep = 0; document.body.classList.remove('coOpen');
   if (cart.length) setTimeout(openCart, 0);
 }
 function coRender() {
@@ -1214,8 +1249,9 @@ function coStep2(body, foot) {
     h('div', { class: 'cosec' }, h('h3', {}, t('co_address')),
       h('div', { class: 'coaddr' }, h('b', {}, 'Ola Nordmann'), h('span', {}, 'Eksempelveien 1'), h('span', {}, '0150 Oslo'), h('small', {}, t('co_example')))),
     h('div', { class: 'cosec' }, h('h3', {}, t('co_delivery')),
-      coOpt(coDemo.ship === 'store', t('co_store'), t('co_store_sub'), t('co_free'), () => { coDemo.ship = 'store'; coRender(); }),
-      coOpt(coDemo.ship === 'std', t('co_std'), t('co_std_sub'), tt.sub - tt.disc >= 1000 ? t('co_free') : kr(59), () => { coDemo.ship = 'std'; coRender(); })),
+      coOpt(coDemo.ship === 'store', t('co_store'), myStore ? myStore.short : t('co_store_sub'), t('co_free'), () => { coDemo.ship = 'store'; coRender(); }),
+      coOpt(coDemo.ship === 'std', t('co_std'), t('co_std_sub'), tt.sub - tt.disc >= 1000 ? t('co_free') : kr(59), () => { coDemo.ship = 'std'; coRender(); }),
+      coDemo.ship === 'store' ? coStoreBlock() : null),
     h('div', { class: 'cosec' }, h('h3', {}, t('co_payment')),
       coOpt(coDemo.pay === 'vipps', h('img', { class: 'vlogo', src: 'vipps-logo.png', alt: 'Vipps' }), '', '', () => { coDemo.pay = 'vipps'; coRender(); }),
       coOpt(coDemo.pay === 'card', t('co_card'), '', '', () => { coDemo.pay = 'card'; coRender(); })),
@@ -1242,6 +1278,114 @@ function coStep3(body, foot) {
   foot.replaceChildren(h('div', { class: 'actions col' },
     h('button', { class: 'cta', onclick: () => closeCheckout() }, t('co_continue')),
     h('a', { class: 'reallink', href: SITE, target: '_blank', rel: 'noopener' }, t('checkout'))));
+}
+
+/* ---------- boutiques et stock par boutique (via le Worker, qui lit le site de F&L) ---------- */
+const PIN = 'M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z M12 12.5a2.5 2.5 0 1 0 0-5a2.5 2.5 0 0 0 0 5z';
+let myStore = store.get('store', null);
+let storeListeners = [], storesP = null, userPos = null;
+function setStore(s) { myStore = s; store.set('store', s); storeListeners = storeListeners.filter((f) => f() !== false); }
+storeListeners.push(() => { if (state.tab === 'mer' && !merPage) renderMer(); });
+function loadStores() {
+  if (!storesP) {
+    const c = store.get('stores', null);
+    if (c && Date.now() - c.t < 864e5 && c.list && c.list.length) storesP = Promise.resolve(c.list);
+    else {
+      storesP = fetch(API + '/_stores').then((r) => (r.ok ? r.json() : [])).then((list) => { if (list.length) store.set('stores', { t: Date.now(), list }); else storesP = null; return list; }).catch(() => { storesP = null; return []; });
+    }
+  }
+  return storesP;
+}
+const stockCache = new Map();
+function loadStock(id, kind) {
+  const k = kind + ':' + id, hit = stockCache.get(k);
+  if (hit && Date.now() - hit.t < 300000) return hit.p;
+  const p = fetch(API + '/_stock?id=' + id + '&type=' + kind).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+  stockCache.set(k, { t: Date.now(), p });
+  p.then((v) => { if (!v) stockCache.delete(k); });
+  return p;
+}
+function stockIdOf(p, shade) {
+  if (!p || !p.vars || !p.vars.length) return { id: p.id, kind: 'simple' };
+  const slug = (p.slugs || [])[p.shades.indexOf(shade)];
+  const v = p.vars.find((x) => x.v === slug);
+  return { id: v ? v.id : p.vars[0].id, kind: 'variable' };
+}
+const lineStockId = (l) => (l.vid ? { id: l.vid, kind: l.kind || 'simple' } : (l.prod ? stockIdOf(l.prod, l.shade) : null));
+const stockOf = (data, s) => { const e = data && data[String(s.n)]; return e ? { st: e[0], at: e[1] } : null; };
+const stkCls = (e) => (!e ? 'out' : (e.st === 'instock' ? 'ok' : (e.st === 'lowstock' ? 'low' : 'out')));
+const stkTxt = (e) => t(!e ? 'stk_out' : (e.st === 'instock' ? 'stk_ok' : (e.st === 'lowstock' ? 'stk_low' : 'stk_out')));
+const stkDot = (cls) => h('span', { class: 'sd ' + cls });
+const stkWhen = (e) => (e && /\d\d:\d\d/.test(e.at || '') ? ' · ' + t('stk_upd') + ' ' + e.at.match(/\d\d:\d\d/)[0] : '');
+const DAYS = ['Søndag', 'Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lørdag'];
+function todayHours(s) {
+  const d = DAYS[new Date().getDay()], l = (s.hours || []).find((x) => x.startsWith(d));
+  return l ? l.slice(d.length + 1).trim() : null;
+}
+function distKm(a, b) {
+  const r = (x) => x * Math.PI / 180, dLat = r(b.lat - a.lat), dLng = r(b.lng - a.lng);
+  const x = Math.sin(dLat / 2) ** 2 + Math.cos(r(a.lat)) * Math.cos(r(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 6371 * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+}
+const kmText = (d) => (d < 10 ? d.toFixed(1) : String(Math.round(d))) + ' km';
+function openStorePicker() {
+  let q = '', stores = [];
+  const list = h('div', { class: 'stlist' }, h('div', { class: 'fload' }, '…'));
+  const near = h('button', { class: 'ghost wide', type: 'button' }, t('st_nearest'));
+  const search = h('input', { class: 'bsearch', type: 'search', placeholder: t('st_search'), autocomplete: 'off', oninput: (e) => { q = e.target.value; draw(); } });
+  const draw = () => {
+    const f = q.trim().toLowerCase();
+    const rows = stores.filter((s) => !f || (s.name + ' ' + s.addr).toLowerCase().includes(f)).map((s) => ({ s, d: userPos && s.lat ? distKm(userPos, s) : null }));
+    rows.sort((a, b) => (a.d != null && b.d != null ? a.d - b.d : a.s.short.localeCompare(b.s.short, 'nb')));
+    list.replaceChildren(...rows.map(({ s, d }) => h('button', { class: 'strow' + (myStore && myStore.n === s.n ? ' sel' : ''), type: 'button', onclick: () => { setStore(s); closeSheet(); } },
+      h('span', { class: 'si2' }, h('b', {}, s.short), h('small', {}, s.addr)),
+      d != null ? h('span', { class: 'km' }, kmText(d)) : null,
+      myStore && myStore.n === s.n ? icon(CHECK, 18, 1.8) : null)));
+  };
+  near.onclick = () => {
+    if (!navigator.geolocation) return;
+    near.textContent = t('st_locating');
+    navigator.geolocation.getCurrentPosition((pos) => { userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude }; near.textContent = t('st_nearest'); draw(); }, () => { near.textContent = t('st_nearest'); }, { timeout: 10000 });
+  };
+  openSheet(h('div', { class: 'sbody' }, sheetHead(t('st_pick')), h('div', { class: 'fsec' }, near, search, list)));
+  loadStores().then((l) => { stores = l; if (l.length) draw(); else list.replaceChildren(h('div', { class: 'fload' }, t('stk_unavail'))); });
+}
+function openStoreStock(p, shade) {
+  const q = stockIdOf(p, shade);
+  const list = h('div', { class: 'stlist' }, h('div', { class: 'fload' }, '…'));
+  const sub = shade && p.shades.length > 1 ? (p.shadeLabel === 'nyanser' ? cleanShade(shade) : shade) : '';
+  openSheet(h('div', { class: 'sbody' }, sheetHead(t('stk_title')),
+    h('div', { class: 'fsec' }, h('div', { class: 'stkhead' }, h('b', {}, p.name), sub ? h('small', {}, sub) : null), list)));
+  Promise.all([loadStores(), loadStock(q.id, q.kind)]).then(([stores, data]) => {
+    if (!data || !stores.length) { list.replaceChildren(h('div', { class: 'fload' }, t('stk_unavail'))); return; }
+    const rows = stores.map((s) => { const e = stockOf(data, s); return { s, e, rank: !e ? 2 : (e.st === 'instock' ? 0 : (e.st === 'lowstock' ? 1 : 2)), d: userPos && s.lat ? distKm(userPos, s) : null }; });
+    const mine = (r) => (myStore && r.s.n === myStore.n ? 0 : 1);
+    rows.sort((a, b) => mine(a) - mine(b) || a.rank - b.rank || (a.d || 0) - (b.d || 0) || a.s.short.localeCompare(b.s.short, 'nb'));
+    list.replaceChildren(...rows.map(({ s, e, d }) => h('button', { class: 'strow' + (myStore && myStore.n === s.n ? ' sel' : ''), type: 'button', onclick: () => { setStore(s); closeSheet(); } },
+      stkDot(stkCls(e)),
+      h('span', { class: 'si2' }, h('b', {}, s.short), h('small', {}, stkTxt(e) + stkWhen(e))),
+      d != null ? h('span', { class: 'km' }, kmText(d)) : null,
+      myStore && myStore.n === s.n ? icon(CHECK, 18, 1.8) : null)));
+  });
+}
+function coStoreBlock() {
+  const box = h('div', { class: 'costore' });
+  if (!myStore) { box.append(h('button', { class: 'ghost wide', type: 'button', onclick: () => openStorePicker() }, t('st_pick'))); return box; }
+  const th = todayHours(myStore);
+  box.append(h('div', { class: 'costhead' },
+    h('b', {}, myStore.name), h('span', {}, myStore.addr), h('small', {}, t('st_today') + ': ' + (th || t('st_closed'))),
+    h('button', { class: 'linkb', type: 'button', onclick: () => openStorePicker() }, t('st_change'))));
+  const list = h('div', { class: 'costk' }, h('small', {}, t('stk_loading')));
+  box.append(list);
+  const items = cart.map((l) => ({ l, q: lineStockId(l) })).filter((x) => x.q);
+  Promise.all(items.map((x) => loadStock(x.q.id, x.q.kind).then((d) => ({ l: x.l, ok: !!d, e: d ? stockOf(d, myStore) : null })))).then((res) => {
+    if (!list.isConnected) return;
+    const avail = res.filter((r) => r.ok && r.e && r.e.st !== 'outofstock').length;
+    list.replaceChildren(
+      ...res.map((r) => h('div', { class: 'cline' }, h('span', { class: 'cl2' }, r.ok ? stkDot(stkCls(r.e)) : stkDot('none'), r.l.name), h('span', { class: 'cs2' }, r.ok ? stkTxt(r.e) : t('stk_unavail')))),
+      h('small', { class: 'costsum' }, t('co_avail', avail, res.length) + (avail < res.length ? ' ' + t('co_pickup_warn') : '')));
+  });
+  return box;
 }
 
 /* ---------- page Mer ---------- */
@@ -1289,6 +1433,14 @@ function renderMer() {
   const openFav = () => { history.pushState({ fav: 1 }, ''); merPage = 'fav'; renderMer(); $('#mer').scrollTop = 0; };
   $('#merBody').replaceChildren(
     h('div', { class: 'mtitle' }, t('mer')),
+    h('section', { class: 'msec' },
+      h('h2', {}, t('my_store')),
+      myStore
+        ? h('div', { class: 'mstore' },
+          h('div', { class: 'ms1' }, h('b', {}, myStore.name), h('span', {}, myStore.addr), h('small', {}, t('st_today') + ': ' + (todayHours(myStore) || t('st_closed')))),
+          h('button', { class: 'ghost', type: 'button', onclick: () => openStorePicker() }, t('st_change')))
+        : h('div', { class: 'mempty' }, icon(PIN, 30, 1.2), h('p', {}, t('st_none')), h('p', { class: 'sub' }, t('st_none_sub')),
+          h('button', { class: 'ghost', type: 'button', onclick: () => openStorePicker() }, t('st_pick')))),
     h('section', { class: 'msec' },
       h('h2', {}, t('favorites')),
       list.length
