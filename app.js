@@ -159,6 +159,7 @@ function mapProduct(p) {
   const range = pr.price_range;
   const attr = (p.attributes || [])[0];
   const shades = attr && attr.terms ? attr.terms.map((t) => text(t.name)) : [];
+  const slugs = attr && attr.terms ? attr.terms.map((t) => t.slug) : [];
   const imgs = (p.images || []);
   return {
     id: p.id,
@@ -175,6 +176,8 @@ function mapProduct(p) {
     paras: paras(p.description).slice(0, 8),
     isNew: (p.tags || []).some((t) => t.id === NEW_TAG),
     shades,
+    slugs,
+    vars: (p.variations || []).map((v) => ({ id: v.id, v: (v.attributes && v.attributes[0] && v.attributes[0].value) || '' })),
     shadeLabel: attr && /farge|nyanse|color|colour/i.test(attr.name || '') ? 'nyanser' : 'varianter'
   };
 }
@@ -473,18 +476,82 @@ function leaveFav() { if (merPage) { merPage = null; skipPop++; history.back(); 
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
 const closeBtn = () => h('button', { class: 'close', 'aria-label': t('close'), onclick: () => closeSheet() }, icon(CLOSE, 20, 1.5));
 
+/* ---------- variantes : image propre à chaque variante, pastille de couleur déduite de la photo ---------- */
+const varCache = new Map();
+function loadVariants(p) {
+  if (!p.vars || !p.vars.length) return Promise.resolve({});
+  if (!varCache.has(p.id)) {
+    varCache.set(p.id, api('/products', { type: 'variation', parent: p.id, per_page: 100, _fields: 'id,images' }).then(({ data }) => {
+      const byId = {};
+      data.forEach((v) => { if (v.images && v.images[0]) byId[v.id] = { src: v.images[0].src, thumb: v.images[0].thumbnail || v.images[0].src }; });
+      const out = {};
+      p.vars.forEach((v) => { if (byId[v.id]) out[v.v] = byId[v.id]; });
+      return out;
+    }).catch(() => { varCache.delete(p.id); return {}; }));
+  }
+  return varCache.get(p.id);
+}
+const swCache = store.get('sw', {});
+let swatchOff = false;
+async function sampleColor(url) {
+  if (swCache[url]) return swCache[url];
+  if (swatchOff) return null;
+  try {
+    const r = await fetch(API + '/_img?u=' + encodeURIComponent(url));
+    if (!r.ok || !(r.headers.get('content-type') || '').startsWith('image/')) { swatchOff = true; return null; }
+    const blobUrl = URL.createObjectURL(await r.blob());
+    const im = await new Promise((ok, ko) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ko; i.src = blobUrl; });
+    URL.revokeObjectURL(blobUrl);
+    const W = 38, H = 48, cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    const cx = cv.getContext('2d', { willReadFrequently: true });
+    cx.drawImage(im, 0, 0, W, H);
+    const d = cx.getImageData(0, 0, W, H).data;
+    let R = 0, G = 0, B = 0, T = 0, r2 = 0, g2 = 0, b2 = 0, n2 = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      if (d[i + 3] < 200) continue;
+      const rr = d[i], gg = d[i + 1], bb = d[i + 2];
+      const mx = Math.max(rr, gg, bb), mn = Math.min(rr, gg, bb), v = mx / 255, sat = mx ? (mx - mn) / mx : 0;
+      if (sat > 0.18 && v > 0.15 && v < 0.97) { const w = sat * sat; R += rr * w; G += gg * w; B += bb * w; T += w; }
+      else if (v < 0.9) { r2 += rr; g2 += gg; b2 += bb; n2++; }
+    }
+    let hex = null;
+    if (T > 0) hex = [R / T, G / T, B / T];
+    else if (n2 > 20) hex = [r2 / n2, g2 / n2, b2 / n2];
+    if (!hex) return null;
+    const col = '#' + hex.map((x) => Math.round(x).toString(16).padStart(2, '0')).join('');
+    swCache[url] = col;
+    store.set('sw', swCache);
+    return col;
+  } catch (e) { return null; }
+}
+
 function openProduct(p) {
   let shade = p.shades.length ? p.shades[0] : '';
   const countOf = (sh) => cart.filter((l) => l.key === p.id + '|' + sh).reduce((n, l) => n + l.qty, 0);
   const chipEls = [];
   const chips = p.shades.length > 1 ? p.shades.slice(0, 40).map((sh, i) => {
     const n = h('span', { class: 'n', hidden: true });
-    const b = h('button', { class: 'chip' + (i === 0 ? ' on' : ''), onclick: () => { shade = sh; showCount(); } }, sh, n);
-    chipEls.push({ b, n, sh });
+    const b = h('button', { class: 'chip' + (i === 0 ? ' on' : ''), onclick: () => { shade = sh; showCount(); showVariant(); } }, sh, n);
+    chipEls.push({ b, n, sh, i });
     return b;
   }) : [];
   const chipBox = h('div', { class: 'chips' }, chips);
   const imgs = p.gallery.length ? p.gallery : (p.img ? [p.img] : []);
+  const gal = h('div', { class: 'gallery' }, imgs.map((src) => h('img', { src, alt: p.name, onerror: (e) => e.target.remove() })));
+  let variants = {};
+  const slugOf = (sh) => (p.slugs || [])[p.shades.indexOf(sh)];
+  const showVariant = () => {
+    const vi = variants[slugOf(shade)];
+    const list = vi ? [vi.src, ...imgs.slice(1).filter((x) => x !== vi.src)] : imgs;
+    if (gal.firstChild && gal.firstChild.getAttribute('src') === list[0]) return;
+    gal.classList.add('swap');
+    setTimeout(() => {
+      gal.replaceChildren(...list.map((src) => h('img', { src, alt: p.name, onerror: (e) => e.target.remove() })));
+      gal.scrollLeft = 0;
+      requestAnimationFrame(() => gal.classList.remove('swap'));
+    }, 130);
+  };
   const cnt = h('span', { class: 'cnt' });
   const showCount = () => {
     const n = countOf(shade);
@@ -500,7 +567,8 @@ function openProduct(p) {
   showCount();
   let running = null;
   add.addEventListener('click', () => {
-    addToCart(p, shade);
+    const vi = variants[slugOf(shade)];
+    addToCart(p, shade, vi ? vi.thumb : null);
     showCount();
     if (running) return;
     add.classList.add('run');
@@ -508,13 +576,30 @@ function openProduct(p) {
   });
   openSheet([
     h('div', { class: 'sbody' },
-      h('div', { class: 'gwrap' }, h('div', { class: 'gallery' }, imgs.map((src) => h('img', { src, alt: p.name, onerror: (e) => e.target.remove() })))),
+      h('div', { class: 'gwrap' }, gal),
       h('div', { class: 'info' }, h('div', { class: 'brand' }, p.brand), h('h1', { class: 'title' }, p.name), priceEl(p)),
       chips.length ? h('div', { class: 'info' }, h('div', { class: 'lbl' }, p.shadeLabel === 'nyanser' ? t('shade') : t('variant')), chipBox) : null,
       p.paras && p.paras.length ? h('div', { class: 'desc' }, p.paras.map((t) => h('p', null, t))) : (p.desc ? h('div', { class: 'desc' }, p.desc) : null),
       h('a', { class: 'site', href: p.url, target: '_blank', rel: 'noopener' }, t('see_site'))),
     h('div', { class: 'actions' }, add, heartBtn(p, 'sq'))
   ]);
+  if (p.vars && p.vars.length) {
+    loadVariants(p).then((v) => {
+      variants = v;
+      showVariant();
+      if (p.shadeLabel !== 'nyanser' || chipEls.length > 40) return;
+      const queue = chipEls.filter((c) => v[p.slugs[c.i]]);
+      const worker = async () => {
+        while (queue.length) {
+          const c = queue.shift();
+          const col = await sampleColor(v[p.slugs[c.i]].thumb);
+          if (col && c.b.isConnected) c.b.insertBefore(h('span', { class: 'sw', style: 'background:' + col }), c.b.firstChild);
+          if (swatchOff) return;
+        }
+      };
+      Promise.all([worker(), worker(), worker(), worker()]);
+    });
+  }
 }
 
 /* ---------- panier (local à la démo) ---------- */
@@ -525,11 +610,11 @@ function renderCartCount() {
   el.hidden = !n;
   el.textContent = n;
 }
-function addToCart(p, shade) {
+function addToCart(p, shade, img) {
   const key = p.id + '|' + shade;
   const line = cart.find((l) => l.key === key);
   if (line) line.qty++;
-  else cart.push({ key, name: p.name, brand: p.brand, img: p.img, price: p.price, shade, qty: 1 });
+  else cart.push({ key, name: p.name, brand: p.brand, img: img || p.img, price: p.price, shade, qty: 1 });
   saveCart();
 }
 function openCart() {

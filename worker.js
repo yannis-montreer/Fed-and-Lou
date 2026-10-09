@@ -9,6 +9,22 @@ export default {
       return new Response(null, { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET' } });
     }
     const cache = caches.default;
+    const u0 = new URL(req.url);
+    /* photos des produits (seulement celles du site), pour que l'app puisse en lire la couleur */
+    if (u0.pathname === '/_img') {
+      const src = u0.searchParams.get('u') || '';
+      if (!src.startsWith('https://fredrikoglouisa.no/wp-content/uploads/')) return new Response('forbidden', { status: 403 });
+      let im = await cache.match(req);
+      if (!im) {
+        const up = await fetch(src);
+        im = new Response(up.body, up);
+        im.headers.delete('Set-Cookie');
+        im.headers.set('Cache-Control', 'public, max-age=86400');
+        im.headers.set('Access-Control-Allow-Origin', '*');
+        if (up.ok) ctx.waitUntil(cache.put(req, im.clone()));
+      }
+      return im;
+    }
     let res = await cache.match(req);
     if (!res) {
       const u = new URL(req.url);

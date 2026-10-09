@@ -77,7 +77,8 @@ nav button.on span{font-weight:600}
 .sbody{flex:1;overflow-y:auto;overscroll-behavior:contain;padding-bottom:12px}
 .gallery{position:relative;height:300px;background:var(--ph);display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
 .gallery::-webkit-scrollbar{display:none}
-.gallery img{flex:none;width:100%;height:100%;object-fit:contain;scroll-snap-align:center;mix-blend-mode:multiply}
+.gallery.swap img{opacity:0}
+.gallery img{transition:opacity .15s;flex:none;width:100%;height:100%;object-fit:contain;scroll-snap-align:center;mix-blend-mode:multiply}
 .close{position:absolute;top:calc(8px + 10px + 4px);right:8px;width:44px;height:44px;border:0;border-radius:22px;background:rgba(255,255,255,.92);display:flex;align-items:center;justify-content:center;padding:0;z-index:2}
 .gwrap{position:relative}
 .gwrap .close{top:8px}
@@ -89,6 +90,8 @@ nav button.on span{font-weight:600}
 .chips{display:flex;gap:8px;flex-wrap:wrap}
 .chip{min-width:44px;height:44px;padding:0 12px;border-radius:22px;border:1px solid var(--line2);background:#fff;font-size:13px}
 .chip{position:relative}
+.chip .sw{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:7px;vertical-align:-2px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.14)}
+.chip.on .sw{box-shadow:0 0 0 1.5px #fff}
 .chip .n{position:absolute;top:-5px;right:-3px;min-width:17px;height:17px;border-radius:9px;background:var(--ink);color:#fff;border:1.5px solid #fff;box-sizing:border-box;font-size:9.5px;font-weight:500;line-height:14px;text-align:center;padding:0 3px;pointer-events:none}
 .chip .n[hidden]{display:none}
 .chip.on .n{background:#fff;color:var(--ink);border-color:var(--ink)}
@@ -99,7 +102,7 @@ nav button.on span{font-weight:600}
 .actions{flex:none;padding:12px 16px calc(env(safe-area-inset-bottom) + 16px);display:flex;gap:10px;border-top:1px solid var(--line);background:#fff}
 .cta{flex:1;height:52px;border:0;background:var(--ink);color:#fff;font-size:15px;font-weight:500;letter-spacing:.02em;display:flex;align-items:center;justify-content:center;text-decoration:none}
 .cta{position:relative;overflow:hidden;gap:8px}
-.cta .lbl{transition:opacity .15s}
+.cta .lbl{transition:opacity .15s;color:inherit;font-size:inherit;letter-spacing:inherit}
 .cta .cnt{min-width:13px;height:13px;box-sizing:border-box;border:1px solid currentColor;border-radius:7px;font-size:7.5px;font-weight:500;line-height:11px;text-align:center;padding:0 2px}
 .cta .cnt[hidden]{display:none}
 .cta .cnt.pop{animation:pop .35s ease}
