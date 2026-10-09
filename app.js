@@ -635,7 +635,17 @@ function lockAxis(el, vert, step) {
       if (!stepLock) { stepLock = true; el.scrollBy({ left: Math.sign(e.deltaX) * el.clientWidth, behavior: 'smooth' }); setTimeout(() => { stepLock = false; }, 500); }
       return;
     }
-    el.style.scrollSnapType = 'none'; clearTimeout(snapT); snapT = setTimeout(() => { el.style.scrollSnapType = ''; }, 160);
+    el.style.scrollSnapType = 'none'; clearTimeout(snapT);
+    snapT = setTimeout(() => {
+      el.style.scrollSnapType = '';
+      /* le navigateur ne recale pas tout seul après un défilement à la molette : on se cale sur la carte la plus proche */
+      const pad = parseFloat(getComputedStyle(el).scrollPaddingLeft) || 0, r0 = el.getBoundingClientRect().left;
+      const pts = [...el.children].map((c) => c.getBoundingClientRect().left - r0 + el.scrollLeft - pad);
+      if (!pts.length) return;
+      const best = pts.reduce((a, b) => (Math.abs(b - el.scrollLeft) < Math.abs(a - el.scrollLeft) ? b : a));
+      const max = el.scrollWidth - el.clientWidth;
+      el.scrollTo({ left: Math.max(0, Math.min(max, best)), behavior: 'smooth' });
+    }, 160);
     if (ax > ay) el.scrollLeft += e.deltaX;
     else { const vs = typeof vert === 'function' ? vert() : vert; if (vs) vs.scrollTop += e.deltaY; }
   }, { passive: false });
