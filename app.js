@@ -16,7 +16,7 @@ const TABS = [
   { key: 'mer', label: 'Mer', icon: 'M5 12a1.2 1.2 0 1 0 .01 0 M12 12a1.2 1.2 0 1 0 .01 0 M19 12a1.2 1.2 0 1 0 .01 0' }
 ];
 const VERSION = 'Demo 1.1';
-const BUILD = 'b37';
+const BUILD = 'b38';
 const SORTS = { date: ['date', 'desc', 'sort_new'], popularity: ['popularity', 'desc', 'sort_pop'], price_asc: ['price', 'asc', 'sort_plow'], price_desc: ['price', 'desc', 'sort_phigh'] };
 const MERKE_ATTR = 4; // attribut « Merke » (marque) de la boutique
 const FILTERS = [['all', 'all'], ['new', 'f_new'], ['sale', 'f_sale']];
@@ -1079,7 +1079,7 @@ function openFilter() {
 }
 
 /* ---------- caisse simulée (aucun paiement, aucune commande, aucune saisie de carte) ---------- */
-let coEl = null, coStep = 0, coDepth = 0, coDone = false, coOpenCode = false, coOpenGift = false, coMsg = '';
+let coEl = null, coStep = 0, coDepth = 0, coDone = false, coOpenCode = false, coOpenGift = false, coMsg = '', coLast = 0, coDraft = { code: '', gift: '' };
 let coDemo = { pct: 0, gift: 0, ship: 'store', pay: 'vipps', order: null };
 const cartSum = (lines) => (lines || cart).reduce((n, l) => n + l.price * l.qty, 0);
 function coTotals(lines) {
@@ -1101,7 +1101,7 @@ function shadeLine(l) {
 function openCheckout() {
   if (coEl) return;
   coDemo = { pct: 0, gift: 0, ship: 'store', pay: 'vipps', order: null };
-  coStep = 1; coDepth = 1; coDone = false; coOpenCode = false; coOpenGift = false; coMsg = '';
+  coStep = 1; coDepth = 1; coDone = false; coOpenCode = false; coOpenGift = false; coMsg = ''; coLast = 0; coDraft = { code: '', gift: '' };
   history.pushState({ co: 1 }, '');
   coEl = h('div', { class: 'co', role: 'dialog', 'aria-modal': 'true' },
     h('div', { class: 'cohead' }, h('button', { class: 'cob', id: 'coBtn', type: 'button' }), h('h2', {}, t('co_title'))),
@@ -1138,10 +1138,12 @@ function coRender() {
   btn.onclick = coStep === 2 ? () => history.back() : () => closeCheckout();
   btn.replaceChildren(coStep === 2 ? icon('M15 6l-6 6 6 6', 22, 1.5) : icon(CLOSE, 22, 1.5));
   const body = $('#coBody'), foot = $('#coFoot');
-  $('#coBody').scrollTop = 0;
+  const keep = coLast === coStep ? body.scrollTop : 0;
+  coLast = coStep;
   if (coStep === 1) coStep1(body, foot);
   else if (coStep === 2) coStep2(body, foot);
   else coStep3(body, foot);
+  body.scrollTop = keep;
 }
 const coRow = (k, v, cls) => h('div', { class: 'cort' + (cls ? ' ' + cls : '') }, h('span', {}, k), h('span', {}, v));
 const coBanner = () => h('div', { class: 'codemo' }, t('co_demo'));
@@ -1153,8 +1155,8 @@ function coTotalsBox(tt, withShip) {
     withShip ? coRow(t('co_shipping'), tt.ship ? kr(tt.ship) : t('co_free')) : null,
     coRow(t('co_total'), kr(tt.total), 'big'));
 }
-function coFold(open, label, ph, onApply, toggle) {
-  const input = h('input', { type: 'text', placeholder: ph, autocomplete: 'off', autocapitalize: 'characters', 'aria-label': ph });
+function coFold(open, label, ph, key, onApply, toggle) {
+  const input = h('input', { type: 'text', placeholder: ph, autocomplete: 'off', autocapitalize: 'characters', 'aria-label': ph, value: coDraft[key], oninput: (e) => { coDraft[key] = e.target.value; } });
   return h('div', { class: 'cofold' },
     h('button', { class: 'cofq', type: 'button', onclick: toggle }, h('span', {}, label), icon(open ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6', 18, 1.5)),
     open ? h('div', { class: 'cofin' }, input, h('button', { class: 'ghost', type: 'button', onclick: () => onApply(input.value.trim().toUpperCase()) }, t('co_apply'))) : null);
@@ -1181,12 +1183,12 @@ function coStep1(body, foot) {
     coBanner(),
     h('div', { class: 'colines' }, lines),
     coTotalsBox(tt, false),
-    coFold(coOpenCode, t('co_code_q'), t('co_code_ph'), (v) => {
-      if (v === 'DEMO10') { coDemo.pct = 10; coMsg = t('co_ok_code'); } else coMsg = t('co_bad');
+    coFold(coOpenCode, t('co_code_q'), t('co_code_ph'), 'code', (v) => {
+      if (v === 'DEMO10') { coDemo.pct = 10; coMsg = t('co_ok_code'); coDraft.code = ''; } else coMsg = t('co_bad');
       coRender();
     }, () => { coOpenCode = !coOpenCode; coMsg = ''; coRender(); }),
-    coFold(coOpenGift, t('co_gift_q'), t('co_gift_ph'), (v) => {
-      if (v === 'GAVE100') { coDemo.gift = 100; coMsg = t('co_ok_gift'); } else coMsg = t('co_bad_gift');
+    coFold(coOpenGift, t('co_gift_q'), t('co_gift_ph'), 'gift', (v) => {
+      if (v === 'GAVE100') { coDemo.gift = 100; coMsg = t('co_ok_gift'); coDraft.gift = ''; } else coMsg = t('co_bad_gift');
       coRender();
     }, () => { coOpenGift = !coOpenGift; coMsg = ''; coRender(); }),
     coMsg ? h('div', { class: 'comsg' }, coMsg) : document.createDocumentFragment(),
