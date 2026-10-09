@@ -42,7 +42,7 @@ const I18N = {
     filter: 'Filter', sort: 'Sorter', brands: 'Merker', price: 'Pris', price_from: 'Fra kr', price_to: 'Til kr', instock_only: 'Kun på lager', reset: 'Nullstill', show_results: 'Vis resultater',
     sort_new: 'Nyeste', sort_pop: 'Populære', sort_plow: 'Pris: lav til høy', sort_phigh: 'Pris: høy til lav', brand_search: 'Søk etter merke', filter_err: 'Kunne ikke hente filtre.',
     pop_title: 'Populære produkter', all_title: 'Alle produkter',
-    oos: 'Utsolgt', prev_img: 'Forrige bilde', next_img: 'Neste bilde', close: 'Lukk', add: 'Legg i handlekurv', see_site: 'Se på fredrikoglouisa.no', cart: 'Handlekurv', cart_empty: 'Handlekurven er tom.',
+    remove: 'Fjern', oos: 'Utsolgt', prev_img: 'Forrige bilde', next_img: 'Neste bilde', close: 'Lukk', add: 'Legg i handlekurv', see_site: 'Se på fredrikoglouisa.no', cart: 'Handlekurv', cart_empty: 'Handlekurven er tom.',
     fewer: 'Færre', more: 'Flere', sum: 'Sum', cart_note: 'Demo: handlekurven lagres bare på denne enheten. Betalingen gjøres hos fredrikoglouisa.no.',
     checkout: 'Fullfør på fredrikoglouisa.no', ptr_go: 'Slipp for å oppdatere', ptr: 'Dra for å oppdatere', fav_save: 'Lagre i favoritter',
     mer: 'Mer', favorites: 'Favoritter', fav_count: (n) => n + (n === 1 ? ' produkt' : ' produkter'), fav_empty: 'Ingen favoritter ennå',
@@ -75,7 +75,7 @@ const I18N = {
     filter: 'Filter', sort: 'Sort', brands: 'Brands', price: 'Price', price_from: 'From kr', price_to: 'To kr', instock_only: 'In stock only', reset: 'Reset', show_results: 'Show results',
     sort_new: 'Newest', sort_pop: 'Most popular', sort_plow: 'Price: low to high', sort_phigh: 'Price: high to low', brand_search: 'Search brand', filter_err: "Couldn't load filters.",
     pop_title: 'Popular products', all_title: 'All products',
-    oos: 'Out of stock', prev_img: 'Previous image', next_img: 'Next image', close: 'Close', add: 'Add to cart', see_site: 'View on fredrikoglouisa.no', cart: 'Cart', cart_empty: 'Your cart is empty.',
+    remove: 'Remove', oos: 'Out of stock', prev_img: 'Previous image', next_img: 'Next image', close: 'Close', add: 'Add to cart', see_site: 'View on fredrikoglouisa.no', cart: 'Cart', cart_empty: 'Your cart is empty.',
     fewer: 'Fewer', more: 'More', sum: 'Total', cart_note: 'Demo: the cart is only stored on this device. Payment is made at fredrikoglouisa.no.',
     checkout: 'Complete at fredrikoglouisa.no', ptr_go: 'Release to refresh', ptr: 'Pull to refresh', fav_save: 'Save to favorites',
     mer: 'More', favorites: 'Favorites', fav_count: (n) => n + (n === 1 ? ' product' : ' products'), fav_empty: 'No favorites yet',
@@ -394,6 +394,7 @@ function showError() {
 function selectTab(key) {
   if (key === 'mer') {
     if (state.tab !== 'mer') state.prevTab = state.tab;
+    afterClose = null;
     closeSheet(true);
     leaveFav();
     state.tab = 'mer';
@@ -431,7 +432,7 @@ $('#search').addEventListener('submit', (e) => {
 
 /* ---------- feuilles (produit, panier) ---------- */
 let sheetEl = null;
-let sheetPushed = false, skipPop = 0, merPage = null;
+let sheetPushed = false, skipPop = 0, merPage = null, afterClose = null, pendingAfterPop = null;
 function openSheet(content, cls) {
   closeSheet(true, true);
   const grab = h('div', { class: 'grab' }, h('i'));
@@ -510,11 +511,21 @@ function closeSheet(now, keepHistory) {
   const el = sheetEl; sheetEl = null;
   el.classList.remove('show');
   if (now) el.remove(); else setTimeout(() => el.remove(), 280);
-  if (sheetPushed && !keepHistory) { sheetPushed = false; skipPop++; history.back(); }
+  let didBack = false;
+  if (sheetPushed && !keepHistory) { sheetPushed = false; skipPop++; didBack = true; history.back(); }
+  if (!keepHistory && afterClose) {
+    const fn = afterClose; afterClose = null;
+    if (didBack) { pendingAfterPop = fn; setTimeout(() => { if (pendingAfterPop === fn) { pendingAfterPop = null; fn(); } }, 450); }
+    else setTimeout(fn, 0);
+  }
 }
 /* geste ou bouton retour : ferme la fiche au lieu de quitter l'app */
 window.addEventListener('popstate', () => {
-  if (skipPop > 0) { skipPop--; return; }
+  if (skipPop > 0) {
+    skipPop--;
+    if (skipPop === 0 && pendingAfterPop) { const f = pendingAfterPop; pendingAfterPop = null; f(); }
+    return;
+  }
   if (sheetEl) { sheetPushed = false; closeSheet(); return; }
   sheetPushed = false;
   if (merPage) { merPage = null; if (state.tab === 'mer') { renderMer(); $('#mer').scrollTop = 0; } }
@@ -781,7 +792,8 @@ function addToCart(p, shade, img) {
   const key = p.id + '|' + shade;
   const line = cart.find((l) => l.key === key);
   if (line) line.qty++;
-  else cart.push({ key, name: p.name, brand: p.brand, img: img || p.img, price: p.price, shade, qty: 1 });
+  else cart.push({ key, name: p.name, brand: p.brand, img: img || p.img, price: p.price, shade, qty: 1, isColor: p.shadeLabel === 'nyanser', col: (img && swCache[img]) || null, prod: p });
+  if (line && p) line.prod = p;
   saveCart();
 }
 function openCart() {
@@ -792,16 +804,25 @@ function openCart() {
     foot.replaceChildren();
     if (!cart.length) { body.append(h('div', { class: 'void' }, t('cart_empty'))); return; }
     for (const l of cart) {
+      const open = l.prod ? () => { afterClose = () => openCart(); openProduct(l.prod); } : null;
+      const txt = l.shade ? l.shade.replace(/^\d{1,3}\s+(?=\S)/, '') : '';
+      const numOnly = !!l.shade && /^[\d\s.,]+$/.test(l.shade);
+      const col = l.isColor ? (l.col || swCache[l.img] || null) : null;
+      const dot = col ? h('span', { class: 'sw', style: 'background:' + col }) : null;
+      const label = dot ? (numOnly ? null : txt) : (numOnly ? l.shade : txt);
+      const shadeRow = l.shade && (dot || label) ? h('div', { class: 'var vr' }, dot, label) : null;
       body.append(h('div', { class: 'line' },
-        h('div', { class: 'th' }, l.img ? h('img', { src: l.img, alt: '', onerror: (e) => e.target.remove() }) : null),
+        h('div', { class: 'th' + (open ? ' go' : ''), onclick: open }, l.img ? h('img', { src: l.img, alt: '', onerror: (e) => e.target.remove() }) : null),
         h('div', { class: 'lm' },
-          h('div', { class: 'brand' }, l.brand), h('div', { class: 'name' }, l.name),
-          l.shade ? h('div', { class: 'var' }, l.shade) : null,
+          h('div', { class: open ? 'go' : '', onclick: open }, h('div', { class: 'brand' }, l.brand), h('div', { class: 'name' }, l.name)),
+          shadeRow,
           h('div', { class: 'price' }, kr(l.price * l.qty)),
           h('div', { class: 'qty' },
-            h('button', { 'aria-label': t('fewer'), onclick: () => { l.qty--; if (l.qty <= 0) cart = cart.filter((x) => x !== l); saveCart(); draw(); } }, '−'),
+            h('button', { 'aria-label': t('fewer'), onclick: () => { l.qty--; if (l.qty <= 0) cart = cart.filter((x) => x !== l); saveCart(); draw(); } }, icon('M6 12h12', 14, 1.7)),
             h('span', {}, l.qty),
-            h('button', { 'aria-label': t('more'), onclick: () => { l.qty++; saveCart(); draw(); } }, '+')))));
+            h('button', { 'aria-label': t('more'), onclick: () => { l.qty++; saveCart(); draw(); } }, icon('M6 12h12 M12 6v12', 14, 1.7)),
+            h('button', { class: 'del', 'aria-label': t('remove'), onclick: () => { cart = cart.filter((x) => x !== l); saveCart(); draw(); } }, icon('M4 7h16 M9 7V5h6v2 M6 7l1 13h10l1-13 M10 11v6 M14 11v6', 20, 1.5))))));
+      if (l.isColor && !col && l.img) sampleColor(l.img).then((cc) => { if (cc && !l.col) { l.col = cc; saveCart(); if (sheetEl && body.isConnected) draw(); } });
     }
     const sum = cart.reduce((s, l) => s + l.price * l.qty, 0);
     body.append(h('div', { class: 'total' }, h('span', {}, t('sum')), h('span', {}, kr(sum))));
