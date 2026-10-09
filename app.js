@@ -5,7 +5,7 @@ const API = 'https://lively-leaf-cd06.yannis-montreer.workers.dev';
 const SITE = 'https://fredrikoglouisa.no/';
 const NEW_TAG = 9764; // tag "Nyheter"
 const PER_PAGE = 24;
-const FIELDS = 'id,name,permalink,prices,on_sale,images,short_description,description,attributes,variations,extensions,brands,tags';
+const FIELDS = 'id,name,permalink,prices,on_sale,images,short_description,description,attributes,variations,extensions,brands,tags,is_in_stock';
 
 const TABS = [
   { key: 'makeup', label: 'Makeup', match: 'makeup', icon: 'M8 21h8v-6H8z M9.5 15V9h5v6 M9.5 9l5-5v5' },
@@ -37,7 +37,7 @@ const I18N = {
     shades: 'nyanser', variants: 'varianter', shade: 'Nyanse', variant: 'Variant',
     retry: 'Prøv igjen', none: 'Ingen produkter funnet', err_more: 'Kunne ikke hente flere produkter.',
     offline: 'Viser lagrede produkter. Ingen kontakt med fredrikoglouisa.no.', err: 'Kunne ikke hente produkter.',
-    prev_img: 'Forrige bilde', next_img: 'Neste bilde', close: 'Lukk', add: 'Legg i handlekurv', see_site: 'Se på fredrikoglouisa.no', cart: 'Handlekurv', cart_empty: 'Handlekurven er tom.',
+    oos: 'Utsolgt', prev_img: 'Forrige bilde', next_img: 'Neste bilde', close: 'Lukk', add: 'Legg i handlekurv', see_site: 'Se på fredrikoglouisa.no', cart: 'Handlekurv', cart_empty: 'Handlekurven er tom.',
     fewer: 'Færre', more: 'Flere', sum: 'Sum', cart_note: 'Demo: handlekurven lagres bare på denne enheten. Betalingen gjøres hos fredrikoglouisa.no.',
     checkout: 'Fullfør på fredrikoglouisa.no', ptr_go: 'Slipp for å oppdatere', ptr: 'Dra for å oppdatere', fav_save: 'Lagre i favoritter',
     mer: 'Mer', favorites: 'Favoritter', fav_count: (n) => n + (n === 1 ? ' produkt' : ' produkter'), fav_empty: 'Ingen favoritter ennå',
@@ -67,7 +67,7 @@ const I18N = {
     shades: 'shades', variants: 'variants', shade: 'Shade', variant: 'Variant',
     retry: 'Try again', none: 'No products found', err_more: "Couldn't load more products.",
     offline: 'Showing saved products. No connection to fredrikoglouisa.no.', err: "Couldn't load products.",
-    prev_img: 'Previous image', next_img: 'Next image', close: 'Close', add: 'Add to cart', see_site: 'View on fredrikoglouisa.no', cart: 'Cart', cart_empty: 'Your cart is empty.',
+    oos: 'Out of stock', prev_img: 'Previous image', next_img: 'Next image', close: 'Close', add: 'Add to cart', see_site: 'View on fredrikoglouisa.no', cart: 'Cart', cart_empty: 'Your cart is empty.',
     fewer: 'Fewer', more: 'More', sum: 'Total', cart_note: 'Demo: the cart is only stored on this device. Payment is made at fredrikoglouisa.no.',
     checkout: 'Complete at fredrikoglouisa.no', ptr_go: 'Release to refresh', ptr: 'Pull to refresh', fav_save: 'Save to favorites',
     mer: 'More', favorites: 'Favorites', fav_count: (n) => n + (n === 1 ? ' product' : ' products'), fav_empty: 'No favorites yet',
@@ -158,10 +158,12 @@ function mapProduct(p) {
   const regular = Number(pr.regular_price) / div;
   const range = pr.price_range;
   const attr = (p.attributes || [])[0];
-  const rawShades = attr && attr.terms ? attr.terms.map((t) => text(t.name)) : [];
+  const used = new Set((p.variations || []).map((v) => v.attributes && v.attributes[0] && v.attributes[0].value));
+  const terms = attr && attr.terms ? attr.terms.filter((t) => !used.size || used.has(t.slug)) : [];
+  const rawShades = terms.map((t) => text(t.name));
   const cleaned = rawShades.map((n) => n.replace(/^\d{1,3}\s+(?=\S)/, ''));
   const shades = cleaned.map((n, i) => (cleaned.filter((x) => x === n).length > 1 ? rawShades[i] : n));
-  const slugs = attr && attr.terms ? attr.terms.map((t) => t.slug) : [];
+  const slugs = terms.map((t) => t.slug);
   const imgs = (p.images || []);
   return {
     id: p.id,
@@ -179,6 +181,7 @@ function mapProduct(p) {
     isNew: (p.tags || []).some((t) => t.id === NEW_TAG),
     shades,
     slugs,
+    inStock: p.is_in_stock !== false,
     vars: (p.variations || []).map((v) => ({ id: v.id, v: (v.attributes && v.attributes[0] && v.attributes[0].value) || '' })),
     shadeLabel: attr && /farge|nyanse|color|colour/i.test(attr.name || '') ? 'nyanser' : 'varianter'
   };
@@ -483,9 +486,9 @@ const varCache = new Map();
 function loadVariants(p) {
   if (!p.vars || !p.vars.length) return Promise.resolve({});
   if (!varCache.has(p.id)) {
-    varCache.set(p.id, api('/products', { type: 'variation', parent: p.id, per_page: 100, _fields: 'id,images' }).then(({ data }) => {
+    varCache.set(p.id, api('/products', { type: 'variation', parent: p.id, per_page: 100, _fields: 'id,images,is_in_stock' }).then(({ data }) => {
       const byId = {};
-      data.forEach((v) => { if (v.images && v.images[0]) byId[v.id] = { src: v.images[0].src, thumb: v.images[0].thumbnail || v.images[0].src }; });
+      data.forEach((v) => { const im = v.images && v.images[0]; byId[v.id] = { src: im ? im.src : null, thumb: im ? (im.thumbnail || im.src) : null, inStock: v.is_in_stock !== false }; });
       const out = {};
       p.vars.forEach((v) => { if (byId[v.id]) out[v.v] = byId[v.id]; });
       return out;
@@ -578,7 +581,7 @@ function openProduct(p) {
   const chipEls = [];
   const chips = p.shades.length > 1 ? p.shades.slice(0, 40).map((sh, i) => {
     const n = h('span', { class: 'n', hidden: true });
-    const b = h('button', { class: 'chip' + (i === 0 ? ' on' : ''), onclick: () => { shade = sh; showCount(); showVariant(); } }, sh, n);
+    const b = h('button', { class: 'chip' + (i === 0 ? ' on' : ''), onclick: () => { shade = sh; showCount(); showVariant(); showStock(); } }, sh, n);
     chipEls.push({ b, n, sh, i });
     return b;
   }) : [];
@@ -589,7 +592,7 @@ function openProduct(p) {
   const slugOf = (sh) => (p.slugs || [])[p.shades.indexOf(sh)];
   const showVariant = () => {
     const vi = variants[slugOf(shade)];
-    const list = vi ? [vi.src, ...imgs.slice(1).filter((x) => x !== vi.src)] : imgs;
+    const list = vi && vi.src ? [vi.src, ...imgs.slice(1).filter((x) => x !== vi.src)] : imgs;
     if (gal.firstChild && gal.firstChild.getAttribute('src') === list[0]) return;
     gal.classList.add('swap');
     setTimeout(() => {
@@ -620,7 +623,16 @@ function openProduct(p) {
   };
   const fx = h('span', { class: 'fx', 'aria-hidden': 'true' }, h('i', { class: 'bar' }), h('i', { class: 'dot' }), h('span', { class: 'bk' }, icon(CARTP, 22, 1.6)));
   const add = h('button', { class: 'cta' }, h('span', { class: 'lbl' }, t('add')), cnt, fx);
+  const isOut = (sh) => { const vi = variants[slugOf(sh)]; return vi ? vi.inStock === false : p.inStock === false; };
+  const showStock = () => {
+    chipEls.forEach(({ b, sh }) => b.classList.toggle('oos', isOut(sh)));
+    const out = isOut(shade);
+    add.disabled = out;
+    add.classList.toggle('oos', out);
+    add.querySelector('.lbl').textContent = out ? t('oos') : t('add');
+  };
   showCount();
+  showStock();
   let running = null;
   add.addEventListener('click', () => {
     const vi = variants[slugOf(shade)];
@@ -644,8 +656,9 @@ function openProduct(p) {
     loadVariants(p).then((v) => {
       variants = v;
       showVariant();
+      showStock();
       if (p.shadeLabel !== 'nyanser' || chipEls.length > 40) return;
-      const queue = chipEls.filter((c) => v[p.slugs[c.i]]);
+      const queue = chipEls.filter((c) => v[p.slugs[c.i]] && v[p.slugs[c.i]].thumb);
       const worker = async () => {
         while (queue.length) {
           const c = queue.shift();

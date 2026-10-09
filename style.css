@@ -99,6 +99,10 @@ nav button.on span{font-weight:600}
 .chip.on .sw{box-shadow:0 0 0 1.5px #fff}
 .chip .n{position:absolute;top:-5px;right:-3px;min-width:17px;height:17px;border-radius:9px;background:var(--ink);color:#fff;border:1.5px solid #fff;box-sizing:border-box;font-size:9.5px;font-weight:500;line-height:14px;text-align:center;padding:0 3px;pointer-events:none}
 .chip .n[hidden]{display:none}
+.chip.oos{color:#aaa6a0;background:#f6f5f3;border-color:var(--line);text-decoration:line-through}
+.chip.oos .sw{opacity:.4}
+.chip.on.oos{background:#8d8982;border-color:#8d8982;color:#fff}
+.cta.oos{background:#b9b5ae;cursor:default}
 .chip.on .n{background:#fff;color:var(--ink);border-color:var(--ink)}
 .chip.on{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:500}
 .desc{padding:16px 16px 0;font-size:14px;font-weight:300;line-height:1.55}
