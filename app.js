@@ -16,7 +16,7 @@ const TABS = [
   { key: 'mer', label: 'Mer', icon: 'M5 12a1.2 1.2 0 1 0 .01 0 M12 12a1.2 1.2 0 1 0 .01 0 M19 12a1.2 1.2 0 1 0 .01 0' }
 ];
 const VERSION = 'Demo 1.1';
-const BUILD = 'b38';
+const BUILD = 'b39';
 const SORTS = { date: ['date', 'desc', 'sort_new'], popularity: ['popularity', 'desc', 'sort_pop'], price_asc: ['price', 'asc', 'sort_plow'], price_desc: ['price', 'desc', 'sort_phigh'] };
 const MERKE_ATTR = 4; // attribut « Merke » (marque) de la boutique
 const FILTERS = [['all', 'all'], ['new', 'f_new'], ['sale', 'f_sale']];
@@ -1186,11 +1186,11 @@ function coStep1(body, foot) {
     coFold(coOpenCode, t('co_code_q'), t('co_code_ph'), 'code', (v) => {
       if (v === 'DEMO10') { coDemo.pct = 10; coMsg = t('co_ok_code'); coDraft.code = ''; } else coMsg = t('co_bad');
       coRender();
-    }, () => { coOpenCode = !coOpenCode; coMsg = ''; coRender(); }),
+    }, () => { coOpenCode = !coOpenCode; if (coOpenCode) coOpenGift = false; coMsg = ''; coRender(); }),
     coFold(coOpenGift, t('co_gift_q'), t('co_gift_ph'), 'gift', (v) => {
       if (v === 'GAVE100') { coDemo.gift = 100; coMsg = t('co_ok_gift'); coDraft.gift = ''; } else coMsg = t('co_bad_gift');
       coRender();
-    }, () => { coOpenGift = !coOpenGift; coMsg = ''; coRender(); }),
+    }, () => { coOpenGift = !coOpenGift; if (coOpenGift) coOpenCode = false; coMsg = ''; coRender(); }),
     coMsg ? h('div', { class: 'comsg' }, coMsg) : document.createDocumentFragment(),
     h('div', { class: 'conote' }, t('co_ship_note')));
   foot.replaceChildren(h('div', { class: 'actions col' },
