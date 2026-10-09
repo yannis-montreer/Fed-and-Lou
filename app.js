@@ -13,8 +13,9 @@ const TABS = [
   { key: 'parfyme', label: 'Parfyme', match: 'parfyme', icon: 'M10 3h4v3h-4z M8 6h8a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z' },
   { key: 'har', label: 'Hår', match: 'hår', icon: 'M4 6h16v5H4z M6 11v7 M9 11v7 M12 11v7 M15 11v7 M18 11v7' },
   { key: 'herre', label: 'Herre', match: 'herre', icon: 'M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M4 21c0-4 3.5-7 8-7s8 3 8 7' },
-  { key: 'gavesett', label: 'Gavesett', match: 'gavesett', icon: 'M4 10h16v10H4z M3 7h18v3H3z M12 7v13 M12 7c-1-3-4-4-5-2s2 2 5 2 M12 7c1-3 4-4 5-2s-2 2-5 2' }
+  { key: 'mer', label: 'Mer', icon: 'M5 12a1.2 1.2 0 1 0 .01 0 M12 12a1.2 1.2 0 1 0 .01 0 M19 12a1.2 1.2 0 1 0 .01 0' }
 ];
+const VERSION = 'Demo 1.0';
 const FILTERS = [['all', 'Alle'], ['new', 'Nyheter'], ['sale', 'Tilbud']];
 const HEART = 'M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z';
 const CLOSE = 'M6 6l12 12 M18 6L6 18';
@@ -148,9 +149,10 @@ function heartBtn(p, cls) {
   const b = h('button', { class: cls + (isFav(p.id) ? ' on' : ''), 'aria-label': 'Lagre i favoritter' }, icon(HEART, cls === 'heart' ? 20 : 22));
   b.addEventListener('click', (e) => {
     e.stopPropagation();
-    if (favs[p.id]) delete favs[p.id]; else favs[p.id] = { id: p.id, name: p.name };
+    if (favs[p.id]) delete favs[p.id]; else favs[p.id] = p;
     store.set('favs', favs);
     document.querySelectorAll('[data-fav="' + p.id + '"]').forEach((x) => x.classList.toggle('on', isFav(p.id)));
+    if (state.tab === 'mer') renderMer();
   });
   b.dataset.fav = p.id;
   return b;
@@ -172,7 +174,17 @@ function card(p) {
 function skeleton() {
   $('#grid').replaceChildren(...Array.from({ length: 6 }, () => h('div', { class: 'card sk' }, h('div', { class: 'ph' }), h('div', {}, h('i'), h('i')))));
 }
-function addCards(items) { $('#grid').append(...items.map(card)); }
+function addCards(items) {
+  const g = $('#grid');
+  const pend = g.querySelector('.card.pend');
+  if (pend) pend.classList.remove('pend');
+  g.append(...items.map(card));
+  /* tant que la suite n'est pas là, on ne montre pas un produit seul sur sa ligne */
+  if (!state.done) {
+    const cs = g.querySelectorAll('.card:not(.sk)');
+    if (cs.length % 2 === 1) cs[cs.length - 1].classList.add('pend');
+  }
+}
 function setStatus(msg, retry) {
   const s = $('#status');
   s.replaceChildren();
@@ -245,7 +257,7 @@ async function load(opts) {
     if (!items.length && !state.done) { state.loading = false; load({ append: true }); return; }
   } catch (e) {
     if (my !== state.token) return;
-    if (append) { setStatus('Kunne ikke hente flere produkter.', () => load({ append: true })); }
+    if (append) { const pd = $('#grid .card.pend'); if (pd) pd.classList.remove('pend'); setStatus('Kunne ikke hente flere produkter.', () => load({ append: true })); }
     else {
       const cached = store.get(key, null);
       if (cached && cached.length) {
@@ -264,6 +276,17 @@ function showError() {
 
 /* ---------- navigation ---------- */
 function selectTab(key) {
+  if (key === 'mer') {
+    if (state.tab !== 'mer') state.prevTab = state.tab;
+    closeSheet(true);
+    state.tab = 'mer';
+    $('#app').classList.add('mer'); $('#mer').hidden = false;
+    renderTabs(); renderMer(); $('#mer').scrollTop = 0;
+    return;
+  }
+  const fromMer = state.tab === 'mer';
+  $('#app').classList.remove('mer'); $('#mer').hidden = true;
+  if (fromMer && key === state.prevTab) { state.tab = key; renderTabs(); return; }
   const same = key === state.tab && !state.query;
   state.tab = key; state.sub = null; state.filter = 'all'; state.query = '';
   $('#q').value = '';
@@ -463,8 +486,65 @@ function openCart() {
 }
 $('#cartBtn').addEventListener('click', openCart);
 
-/* ---------- panier flottant : remonte quand l'en-tête a défilé ---------- */
-$('#scroller').addEventListener('scroll', () => { $('#app').classList.toggle('scrolled', $('#scroller').scrollTop > 40); }, { passive: true });
+/* ---------- page Mer ---------- */
+const CHEV = 'M9 6l6 6-6 6';
+const LEGAL = {
+  'Om demoen': [
+    ['', 'Dette er en uoffisiell demo av en mobilapp for Fredrik & Louisa. Den viser hvordan nettbutikken kan oppleves som en app på mobilen.'],
+    ['Produkter og innhold', 'Produkter, bilder, priser og beskrivelser hentes direkte fra fredrikoglouisa.no hver gang appen åpnes, og tilhører Fredrik & Louisa og de respektive merkevarene.'],
+    ['Status', 'Demoen er ikke bestilt av eller godkjent av Fredrik & Louisa. Den er laget som et utgangspunkt for en samtale.']
+  ],
+  'Personvern': [
+    ['', 'Demoen har ingen brukerkonto, ingen sporing og ingen analyseverktøy.'],
+    ['Lagret på enheten', 'Favoritter, handlekurv og sist viste produkter lagres bare på denne enheten, i nettleserens lokale lagring. Ingenting sendes videre. Du kan slette alt under «Tøm lagrede data».'],
+    ['Tredjeparter', 'Produktdata hentes via en mellomtjener hos Cloudflare, som bare videresender offentlige produktdata fra fredrikoglouisa.no. Cloudflare ser teknisk sett IP-adressen din. Skrifttyper lastes fra Google Fonts, som også ser IP-adressen din.']
+  ],
+  'Vilkår og juridisk info': [
+    ['', 'Demoen er kun til visning. Handlekurven er lokal og brukes bare for å vise hvordan den kan fungere: ingen bestilling, ingen betaling og ingen kundedata.'],
+    ['Kjøp', '«Fullfør på fredrikoglouisa.no» sender deg til den ordinære nettbutikken. Der skjer kjøpet på butikkens egne vilkår.'],
+    ['Priser og lager', 'Priser, tilbud og lagerstatus hentes fra nettbutikken, men kan avvike fra det som gjelder der. Det som står på fredrikoglouisa.no er gjeldende.'],
+    ['Varemerker', 'Varemerker, produktnavn, bilder og tekster tilhører sine respektive eiere.']
+  ]
+};
+function openInfo(title) {
+  openSheet(h('div', { class: 'sbody' },
+    h('div', { class: 'shead' }, h('h2', {}, title), closeBtn()),
+    h('div', { class: 'legal' }, LEGAL[title].flatMap(([t, p]) => [t ? h('h3', {}, t) : null, h('p', {}, p)]))));
+}
+function clearData() {
+  if (!confirm('Tømme favoritter, handlekurv og lagrede data på denne enheten?')) return;
+  try { Object.keys(localStorage).filter((k) => k.startsWith('fl.')).forEach((k) => localStorage.removeItem(k)); } catch (e) { /* ignorer */ }
+  favs = {}; cart = []; renderCartCount(); renderMer();
+}
+function renderMer() {
+  const list = Object.values(favs).filter((f) => f && f.img && f.shades);
+  const row = (label, fn, cls) => h('button', { class: 'mrow' + (cls ? ' ' + cls : ''), onclick: fn }, h('span', {}, label), cls ? null : icon(CHEV, 18, 1.5));
+  $('#merBody').replaceChildren(
+    h('section', { class: 'msec' },
+      h('h2', {}, 'Favoritter', list.length ? h('span', { class: 'ct' }, String(list.length)) : null),
+      list.length
+        ? h('div', { class: 'grid' }, list.map(card))
+        : h('div', { class: 'mempty' }, icon(HEART, 30, 1.2), h('p', {}, 'Ingen favoritter ennå'), h('p', { class: 'sub' }, 'Trykk på hjertet på et produkt for å lagre det her.'))),
+    h('section', { class: 'msec' },
+      h('h2', {}, 'Informasjon'),
+      h('div', { class: 'mlist' }, Object.keys(LEGAL).map((t) => row(t, () => openInfo(t))))),
+    h('section', { class: 'msec' },
+      h('h2', {}, 'Data'),
+      h('div', { class: 'mlist' }, row('Tøm lagrede data', clearData, 'danger'))),
+    h('p', { class: 'mfoot' }, h('b', {}, 'Fredrik & Louisa'), 'Uoffisiell demo · ' + VERSION));
+}
+
+/* ---------- en-tête : recherche et filtres se cachent en descendant, reviennent en remontant ---------- */
+(function () {
+  const sc = $('#scroller'), tools = $('#tools');
+  let last = 0;
+  sc.addEventListener('scroll', () => {
+    const y = Math.max(0, sc.scrollTop), d = y - last;
+    if (y <= 2 || document.activeElement === $('#q')) { tools.classList.remove('hide'); last = y; }
+    else if (d > 6) { tools.classList.add('hide'); last = y; }
+    else if (d < -6) { tools.classList.remove('hide'); last = y; }
+  }, { passive: true });
+})();
 
 /* ---------- pull to refresh ---------- */
 (function () {
