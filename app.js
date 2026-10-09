@@ -12,11 +12,11 @@ const TABS = [
   { key: 'hudpleie', label: 'Hudpleie', match: 'hudpleie', icon: 'M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z' },
   { key: 'parfyme', label: 'Parfyme', match: 'parfyme', icon: 'M10 3h4v3h-4z M8 6h8a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z' },
   { key: 'har', label: 'Hår', match: 'hår', icon: 'M4 6h16v5H4z M6 11v7 M9 11v7 M12 11v7 M15 11v7 M18 11v7' },
-  { key: 'herre', label: 'Herre', match: 'herre', icon: 'M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M4 21c0-4 3.5-7 8-7s8 3 8 7' },
+  { key: 'herre', label: 'Herre', match: 'herre', icon: 'M12 10c-1.5-1.8-4-2-6-1C4 10 2.8 12 2.5 14.5c2-1.2 4-1.3 6-.5 1.5.6 2.5.2 3.5-.8 1 1 2 1.4 3.5.8 2-.8 4-.7 6 .5C21.2 12 20 10 18 9c-2-1-4.500-.8-6 1z' },
   { key: 'mer', label: 'Mer', icon: 'M5 12a1.2 1.2 0 1 0 .01 0 M12 12a1.2 1.2 0 1 0 .01 0 M19 12a1.2 1.2 0 1 0 .01 0' }
 ];
-const VERSION = 'Demo 1.0';
-const FILTERS = [['all', 'Alle'], ['new', 'Nyheter'], ['sale', 'Tilbud']];
+const VERSION = 'Demo 1.1';
+const FILTERS = [['all', 'all'], ['new', 'f_new'], ['sale', 'f_sale']];
 const HEART = 'M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z';
 const CLOSE = 'M6 6l12 12 M18 6L6 18';
 const CARTP = 'M3 4h2.5l2.2 10.5h10.3l2-7.5H6.4 M9.5 19h.01 M16.5 19h.01';
@@ -28,6 +28,73 @@ const store = {
   get(k, d) { try { const v = localStorage.getItem('fl.' + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem('fl.' + k, JSON.stringify(v)); } catch (e) { /* quota ou mode privé */ } }
 };
+/* ---------- langue (interface seulement : les produits restent ceux du site) ---------- */
+const I18N = {
+  no: {
+    tab_makeup: 'Makeup', tab_hudpleie: 'Hudpleie', tab_parfyme: 'Parfyme', tab_har: 'Hår', tab_herre: 'Herre', tab_mer: 'Mer',
+    all: 'Alle', f_new: 'Nyheter', f_sale: 'Tilbud', new: 'Nyhet', from: 'Fra ',
+    search: 'Søk', search_ph: 'Søk på produkt eller merke', search_pill: 'Søk: ', categories: 'Kategorier',
+    shades: 'nyanser', variants: 'varianter', shade: 'Nyanse', variant: 'Variant',
+    retry: 'Prøv igjen', none: 'Ingen produkter funnet', err_more: 'Kunne ikke hente flere produkter.',
+    offline: 'Viser lagrede produkter. Ingen kontakt med fredrikoglouisa.no.', err: 'Kunne ikke hente produkter.',
+    close: 'Lukk', add: 'Legg i handlekurv', see_site: 'Se på fredrikoglouisa.no', cart: 'Handlekurv', cart_empty: 'Handlekurven er tom.',
+    fewer: 'Færre', more: 'Flere', sum: 'Sum', cart_note: 'Demo: handlekurven lagres bare på denne enheten. Betalingen gjøres hos fredrikoglouisa.no.',
+    checkout: 'Fullfør på fredrikoglouisa.no', ptr_go: 'Slipp for å oppdatere', ptr: 'Dra for å oppdatere', fav_save: 'Lagre i favoritter',
+    mer: 'Mer', favorites: 'Favoritter', fav_count: (n) => n + (n === 1 ? ' produkt' : ' produkter'), fav_empty: 'Ingen favoritter ennå',
+    fav_empty_sub: 'Trykk på hjertet på et produkt for å lagre det her.', back: 'Tilbake',
+    language: 'Språk', info: 'Informasjon', data: 'Data', clear: 'Tøm lagrede data',
+    clear_q: 'Tømme favoritter, handlekurv og lagrede data på denne enheten?', unofficial: 'Uoffisiell demo',
+    legal: [
+      ['Om demoen', [
+        ['', 'Dette er en uoffisiell demo av en mobilapp for Fredrik & Louisa. Den viser hvordan nettbutikken kan oppleves som en app på mobilen.'],
+        ['Produkter og innhold', 'Produkter, bilder, priser og beskrivelser hentes direkte fra fredrikoglouisa.no hver gang appen åpnes, og tilhører Fredrik & Louisa og de respektive merkevarene.'],
+        ['Status', 'Demoen er ikke bestilt av eller godkjent av Fredrik & Louisa. Den er laget som et utgangspunkt for en samtale.']]],
+      ['Personvern', [
+        ['', 'Demoen har ingen brukerkonto, ingen sporing og ingen analyseverktøy.'],
+        ['Lagret på enheten', 'Favoritter, handlekurv, språkvalg og sist viste produkter lagres bare på denne enheten, i nettleserens lokale lagring. Ingenting sendes videre. Du kan slette alt under «Tøm lagrede data».'],
+        ['Tredjeparter', 'Produktdata hentes via en mellomtjener hos Cloudflare, som bare videresender offentlige produktdata fra fredrikoglouisa.no. Cloudflare ser teknisk sett IP-adressen din. Skrifttyper lastes fra Google Fonts, som også ser IP-adressen din.']]],
+      ['Vilkår og juridisk info', [
+        ['', 'Demoen er kun til visning. Handlekurven er lokal og brukes bare for å vise hvordan den kan fungere: ingen bestilling, ingen betaling og ingen kundedata.'],
+        ['Kjøp', '«Fullfør på fredrikoglouisa.no» sender deg til den ordinære nettbutikken. Der skjer kjøpet på butikkens egne vilkår.'],
+        ['Priser og lager', 'Priser, tilbud og lagerstatus hentes fra nettbutikken, men kan avvike fra det som gjelder der. Det som står på fredrikoglouisa.no er gjeldende.'],
+        ['Varemerker', 'Varemerker, produktnavn, bilder og tekster tilhører sine respektive eiere.']]]
+    ]
+  },
+  en: {
+    tab_makeup: 'Makeup', tab_hudpleie: 'Skincare', tab_parfyme: 'Fragrance', tab_har: 'Hair', tab_herre: 'Men', tab_mer: 'More',
+    all: 'All', f_new: 'New', f_sale: 'Offers', new: 'New', from: 'From ',
+    search: 'Search', search_ph: 'Search for a product or brand', search_pill: 'Search: ', categories: 'Categories',
+    shades: 'shades', variants: 'variants', shade: 'Shade', variant: 'Variant',
+    retry: 'Try again', none: 'No products found', err_more: "Couldn't load more products.",
+    offline: 'Showing saved products. No connection to fredrikoglouisa.no.', err: "Couldn't load products.",
+    close: 'Close', add: 'Add to cart', see_site: 'View on fredrikoglouisa.no', cart: 'Cart', cart_empty: 'Your cart is empty.',
+    fewer: 'Fewer', more: 'More', sum: 'Total', cart_note: 'Demo: the cart is only stored on this device. Payment is made at fredrikoglouisa.no.',
+    checkout: 'Complete at fredrikoglouisa.no', ptr_go: 'Release to refresh', ptr: 'Pull to refresh', fav_save: 'Save to favorites',
+    mer: 'More', favorites: 'Favorites', fav_count: (n) => n + (n === 1 ? ' product' : ' products'), fav_empty: 'No favorites yet',
+    fav_empty_sub: 'Tap the heart on a product to save it here.', back: 'Back',
+    language: 'Language', info: 'Information', data: 'Data', clear: 'Clear saved data',
+    clear_q: 'Clear favorites, cart and saved data on this device?', unofficial: 'Unofficial demo',
+    legal: [
+      ['About the demo', [
+        ['', 'This is an unofficial demo of a mobile app for Fredrik & Louisa. It shows how the online store could feel as an app on your phone.'],
+        ['Products and content', 'Products, images, prices and descriptions are fetched directly from fredrikoglouisa.no every time the app is opened, and belong to Fredrik & Louisa and the respective brands. Product content is shown in Norwegian.'],
+        ['Status', 'The demo has not been commissioned or approved by Fredrik & Louisa. It was made as a starting point for a conversation.']]],
+      ['Privacy', [
+        ['', 'The demo has no user account, no tracking and no analytics tools.'],
+        ['Stored on the device', 'Favorites, cart, language choice and recently viewed products are stored only on this device, in the browser\'s local storage. Nothing is sent on. You can delete everything under "Clear saved data".'],
+        ['Third parties', 'Product data is fetched through an intermediary server at Cloudflare, which only forwards public product data from fredrikoglouisa.no. Cloudflare technically sees your IP address. Fonts are loaded from Google Fonts, which also sees your IP address.']]],
+      ['Terms and legal information', [
+        ['', 'The demo is for display only. The cart is local and only shows how it could work: no ordering, no payment and no customer data.'],
+        ['Purchases', '"Complete at fredrikoglouisa.no" takes you to the regular online store. Purchases there are made under the store\'s own terms.'],
+        ['Prices and stock', 'Prices, offers and stock status are fetched from the online store but may differ from what applies there. What is shown on fredrikoglouisa.no is binding.'],
+        ['Trademarks', 'Trademarks, product names, images and texts belong to their respective owners.']]]
+    ]
+  }
+};
+let LANG = store.get('lang', 'no');
+if (!I18N[LANG]) LANG = 'no';
+const t = (k, ...a) => { const v = I18N[LANG][k] != null ? I18N[LANG][k] : (I18N.no[k] != null ? I18N.no[k] : k); return typeof v === 'function' ? v(...a) : v; };
+
 function h(tag, attrs, ...kids) {
   const e = document.createElement(tag);
   for (const [n, v] of Object.entries(attrs || {})) {
@@ -124,29 +191,29 @@ const isFav = (id) => !!favs[id];
 /* ---------- rendu : tabs, pills, filtres ---------- */
 function renderTabs() {
   const nav = $('#tabs');
-  nav.replaceChildren(...TABS.map((t) => h('button', { class: t.key === state.tab && !state.query ? 'on' : '', 'aria-label': t.label, onclick: () => selectTab(t.key) }, icon(t.icon, 24), h('span', {}, t.label))));
+  nav.replaceChildren(...TABS.map((tb) => h('button', { class: tb.key === state.tab && !state.query ? 'on' : '', 'aria-label': t('tab_' + tb.key), onclick: () => selectTab(tb.key) }, icon(tb.icon, 24), h('span', {}, t('tab_' + tb.key)))));
 }
 function renderPills() {
   const box = $('#pills');
   if (state.query) {
-    box.replaceChildren(h('button', { class: 'pill on', onclick: clearSearch }, 'Søk: ' + state.query + '  ✕'));
+    box.replaceChildren(h('button', { class: 'pill on', onclick: clearSearch }, t('search_pill') + state.query + '  ✕'));
     return;
   }
-  const all = [{ id: null, name: 'Alle' }, ...state.subs];
+  const all = [{ id: null, name: t('all') }, ...state.subs];
   box.replaceChildren(...all.map((s) => h('button', { class: 'pill' + (state.sub === s.id ? ' on' : ''), onclick: () => { state.sub = s.id; renderPills(); load(); } }, s.name)));
 }
 function renderFilters() {
-  $('#filters').replaceChildren(...FILTERS.map(([k, l]) => h('button', { class: state.filter === k ? 'on' : '', onclick: () => { state.filter = k; renderFilters(); load(); } }, l)));
+  $('#filters').replaceChildren(...FILTERS.map(([k, lk]) => h('button', { class: state.filter === k ? 'on' : '', onclick: () => { state.filter = k; renderFilters(); load(); } }, t(lk))));
 }
 
 /* ---------- rendu : grille ---------- */
 function priceEl(p) {
-  const pre = p.from != null && !p.onSale ? 'Fra ' : '';
+  const pre = p.from != null && !p.onSale ? t('from') : '';
   if (p.onSale) return h('div', { class: 'price sale' }, h('span', { class: 'now' }, kr(p.price)), h('s', {}, kr(p.regular)));
   return h('div', { class: 'price' }, h('span', {}, pre + kr(p.from != null ? p.from : p.price)));
 }
 function heartBtn(p, cls) {
-  const b = h('button', { class: cls + (isFav(p.id) ? ' on' : ''), 'aria-label': 'Lagre i favoritter' }, icon(HEART, cls === 'heart' ? 20 : 22));
+  const b = h('button', { class: cls + (isFav(p.id) ? ' on' : ''), 'aria-label': t('fav_save') }, icon(HEART, cls === 'heart' ? 20 : 22));
   b.addEventListener('click', (e) => {
     e.stopPropagation();
     if (favs[p.id]) delete favs[p.id]; else favs[p.id] = p;
@@ -162,13 +229,13 @@ function card(p) {
   const el = h('article', { class: 'card', role: 'button', tabindex: '0', onclick: () => openProduct(p), onkeydown: (e) => { if (e.key === 'Enter') openProduct(p); } },
     h('div', { class: 'ph' },
       p.img ? h('img', { src: p.img, alt: '', loading: 'lazy', decoding: 'async', onerror: (e) => e.target.remove() }) : null,
-      p.onSale ? h('span', { class: 'badge' }, '-' + pct + ' %') : (p.isNew ? h('span', { class: 'badge new' }, 'Nyhet') : null),
+      p.onSale ? h('span', { class: 'badge' }, '-' + pct + ' %') : (p.isNew ? h('span', { class: 'badge new' }, t('new')) : null),
       heartBtn(p, 'heart')),
     h('div', { class: 'meta' },
       h('div', { class: 'brand' }, p.brand),
       h('div', { class: 'name' }, p.name),
       priceEl(p),
-      p.shades.length > 1 ? h('div', { class: 'var' }, p.shades.length + ' ' + p.shadeLabel) : null));
+      p.shades.length > 1 ? h('div', { class: 'var' }, p.shades.length + ' ' + t(p.shadeLabel === 'nyanser' ? 'shades' : 'variants')) : null));
   return el;
 }
 function skeleton() {
@@ -189,7 +256,7 @@ function setStatus(msg, retry) {
   const s = $('#status');
   s.replaceChildren();
   if (msg) s.append(msg);
-  if (msg && retry) s.append(h('button', { onclick: retry }, 'Prøv igjen'));
+  if (msg && retry) s.append(h('button', { onclick: retry }, t('retry')));
 }
 
 /* ---------- chargement ---------- */
@@ -251,27 +318,27 @@ async function load(opts) {
     state.items.push(...items);
     state.done = pages ? state.page >= pages : items.length < PER_PAGE;
     state.page++;
-    if (!state.items.length && state.done) $('#grid').replaceChildren(h('div', { class: 'empty' }, 'Ingen produkter funnet'));
+    if (!state.items.length && state.done) $('#grid').replaceChildren(h('div', { class: 'empty' }, t('none')));
     else addCards(items);
     setStatus('');
     if (!items.length && !state.done) { state.loading = false; load({ append: true }); return; }
   } catch (e) {
     if (my !== state.token) return;
-    if (append) { const pd = $('#grid .card.pend'); if (pd) pd.classList.remove('pend'); setStatus('Kunne ikke hente flere produkter.', () => load({ append: true })); }
+    if (append) { const pd = $('#grid .card.pend'); if (pd) pd.classList.remove('pend'); setStatus(t('err_more'), () => load({ append: true })); }
     else {
       const cached = store.get(key, null);
       if (cached && cached.length) {
         $('#grid').replaceChildren();
         state.items = cached; state.done = true;
         addCards(cached);
-        setStatus('Viser lagrede produkter. Ingen kontakt med fredrikoglouisa.no.', () => load());
+        setStatus(t('offline'), () => load());
       } else showError();
     }
   } finally { if (my === state.token) state.loading = false; }
 }
 function showError() {
   $('#grid').replaceChildren();
-  setStatus('Kunne ikke hente produkter.', async () => { try { await loadCats(); } catch (e) { } loadSubs(); load(); });
+  setStatus(t('err'), async () => { try { await loadCats(); } catch (e) { } loadSubs(); load(); });
 }
 
 /* ---------- navigation ---------- */
@@ -279,12 +346,14 @@ function selectTab(key) {
   if (key === 'mer') {
     if (state.tab !== 'mer') state.prevTab = state.tab;
     closeSheet(true);
+    leaveFav();
     state.tab = 'mer';
     $('#app').classList.add('mer'); $('#mer').hidden = false;
     renderTabs(); renderMer(); $('#mer').scrollTop = 0;
     return;
   }
   const fromMer = state.tab === 'mer';
+  leaveFav();
   $('#app').classList.remove('mer'); $('#mer').hidden = true;
   if (fromMer && key === state.prevTab) { state.tab = key; renderTabs(); return; }
   const same = key === state.tab && !state.query;
@@ -312,7 +381,7 @@ $('#search').addEventListener('submit', (e) => {
 
 /* ---------- feuilles (produit, panier) ---------- */
 let sheetEl = null;
-let sheetPushed = false;
+let sheetPushed = false, skipPop = 0, merPage = null;
 function openSheet(content) {
   closeSheet(true, true);
   const grab = h('div', { class: 'grab' }, h('i'));
@@ -391,12 +460,18 @@ function closeSheet(now, keepHistory) {
   const el = sheetEl; sheetEl = null;
   el.classList.remove('show');
   if (now) el.remove(); else setTimeout(() => el.remove(), 280);
-  if (sheetPushed && !keepHistory) { sheetPushed = false; history.back(); }
+  if (sheetPushed && !keepHistory) { sheetPushed = false; skipPop++; history.back(); }
 }
 /* geste ou bouton retour : ferme la fiche au lieu de quitter l'app */
-window.addEventListener('popstate', () => { if (sheetEl) { sheetPushed = false; closeSheet(); } else sheetPushed = false; });
+window.addEventListener('popstate', () => {
+  if (skipPop > 0) { skipPop--; return; }
+  if (sheetEl) { sheetPushed = false; closeSheet(); return; }
+  sheetPushed = false;
+  if (merPage) { merPage = null; if (state.tab === 'mer') { renderMer(); $('#mer').scrollTop = 0; } }
+});
+function leaveFav() { if (merPage) { merPage = null; skipPop++; history.back(); } }
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
-const closeBtn = () => h('button', { class: 'close', 'aria-label': 'Lukk', onclick: () => closeSheet() }, icon(CLOSE, 20, 1.5));
+const closeBtn = () => h('button', { class: 'close', 'aria-label': t('close'), onclick: () => closeSheet() }, icon(CLOSE, 20, 1.5));
 
 function openProduct(p) {
   let shade = p.shades.length ? p.shades[0] : '';
@@ -417,11 +492,11 @@ function openProduct(p) {
     chipEls.forEach(({ b, n: bn, sh }) => {
       const on = sh === shade, k = countOf(sh);
       b.classList.toggle('on', on);
-      bn.textContent = k; bn.hidden = on || !k;
+      bn.textContent = k; bn.hidden = !k;
     });
   };
   const fx = h('span', { class: 'fx', 'aria-hidden': 'true' }, h('i', { class: 'bar' }), h('i', { class: 'dot' }), h('span', { class: 'bk' }, icon(CARTP, 22, 1.6)));
-  const add = h('button', { class: 'cta' }, h('span', { class: 'lbl' }, 'Legg i handlekurv'), cnt, fx);
+  const add = h('button', { class: 'cta' }, h('span', { class: 'lbl' }, t('add')), cnt, fx);
   showCount();
   let running = null;
   add.addEventListener('click', () => {
@@ -429,15 +504,15 @@ function openProduct(p) {
     showCount();
     if (running) return;
     add.classList.add('run');
-    running = setTimeout(() => { add.classList.remove('run'); running = null; cnt.classList.remove('pop'); void cnt.offsetWidth; cnt.classList.add('pop'); }, 1900);
+    running = setTimeout(() => { add.classList.remove('run'); running = null; cnt.classList.remove('pop'); void cnt.offsetWidth; cnt.classList.add('pop'); }, 1520);
   });
   openSheet([
     h('div', { class: 'sbody' },
       h('div', { class: 'gwrap' }, h('div', { class: 'gallery' }, imgs.map((src) => h('img', { src, alt: p.name, onerror: (e) => e.target.remove() })))),
       h('div', { class: 'info' }, h('div', { class: 'brand' }, p.brand), h('h1', { class: 'title' }, p.name), priceEl(p)),
-      chips.length ? h('div', { class: 'info' }, h('div', { class: 'lbl' }, p.shadeLabel === 'nyanser' ? 'Nyanse' : 'Variant'), chipBox) : null,
+      chips.length ? h('div', { class: 'info' }, h('div', { class: 'lbl' }, p.shadeLabel === 'nyanser' ? t('shade') : t('variant')), chipBox) : null,
       p.paras && p.paras.length ? h('div', { class: 'desc' }, p.paras.map((t) => h('p', null, t))) : (p.desc ? h('div', { class: 'desc' }, p.desc) : null),
-      h('a', { class: 'site', href: p.url, target: '_blank', rel: 'noopener' }, 'Se på fredrikoglouisa.no')),
+      h('a', { class: 'site', href: p.url, target: '_blank', rel: 'noopener' }, t('see_site'))),
     h('div', { class: 'actions' }, add, heartBtn(p, 'sq'))
   ]);
 }
@@ -461,9 +536,9 @@ function openCart() {
   const body = h('div', { class: 'sbody' });
   const foot = h('div', {});
   const draw = () => {
-    body.replaceChildren(h('div', { class: 'shead' }, h('h2', {}, 'Handlekurv'), closeBtn()));
+    body.replaceChildren(h('div', { class: 'shead' }, h('h2', {}, t('cart')), closeBtn()));
     foot.replaceChildren();
-    if (!cart.length) { body.append(h('div', { class: 'void' }, 'Handlekurven er tom.')); return; }
+    if (!cart.length) { body.append(h('div', { class: 'void' }, t('cart_empty'))); return; }
     for (const l of cart) {
       body.append(h('div', { class: 'line' },
         h('div', { class: 'th' }, l.img ? h('img', { src: l.img, alt: '', onerror: (e) => e.target.remove() }) : null),
@@ -472,14 +547,14 @@ function openCart() {
           l.shade ? h('div', { class: 'var' }, l.shade) : null,
           h('div', { class: 'price' }, kr(l.price * l.qty)),
           h('div', { class: 'qty' },
-            h('button', { 'aria-label': 'Færre', onclick: () => { l.qty--; if (l.qty <= 0) cart = cart.filter((x) => x !== l); saveCart(); draw(); } }, '−'),
+            h('button', { 'aria-label': t('fewer'), onclick: () => { l.qty--; if (l.qty <= 0) cart = cart.filter((x) => x !== l); saveCart(); draw(); } }, '−'),
             h('span', {}, l.qty),
-            h('button', { 'aria-label': 'Flere', onclick: () => { l.qty++; saveCart(); draw(); } }, '+')))));
+            h('button', { 'aria-label': t('more'), onclick: () => { l.qty++; saveCart(); draw(); } }, '+')))));
     }
     const sum = cart.reduce((s, l) => s + l.price * l.qty, 0);
-    body.append(h('div', { class: 'total' }, h('span', {}, 'Sum'), h('span', {}, kr(sum))));
-    body.append(h('div', { class: 'note' }, 'Demo: handlekurven lagres bare på denne enheten. Betalingen gjøres hos fredrikoglouisa.no.'));
-    foot.append(h('div', { class: 'actions' }, h('a', { class: 'cta', href: SITE, target: '_blank', rel: 'noopener' }, 'Fullfør på fredrikoglouisa.no')));
+    body.append(h('div', { class: 'total' }, h('span', {}, t('sum')), h('span', {}, kr(sum))));
+    body.append(h('div', { class: 'note' }, t('cart_note')));
+    foot.append(h('div', { class: 'actions' }, h('a', { class: 'cta', href: SITE, target: '_blank', rel: 'noopener' }, t('checkout'))));
   };
   draw();
   openSheet([body, foot]);
@@ -488,50 +563,66 @@ $('#cartBtn').addEventListener('click', openCart);
 
 /* ---------- page Mer ---------- */
 const CHEV = 'M9 6l6 6-6 6';
-const LEGAL = {
-  'Om demoen': [
-    ['', 'Dette er en uoffisiell demo av en mobilapp for Fredrik & Louisa. Den viser hvordan nettbutikken kan oppleves som en app på mobilen.'],
-    ['Produkter og innhold', 'Produkter, bilder, priser og beskrivelser hentes direkte fra fredrikoglouisa.no hver gang appen åpnes, og tilhører Fredrik & Louisa og de respektive merkevarene.'],
-    ['Status', 'Demoen er ikke bestilt av eller godkjent av Fredrik & Louisa. Den er laget som et utgangspunkt for en samtale.']
-  ],
-  'Personvern': [
-    ['', 'Demoen har ingen brukerkonto, ingen sporing og ingen analyseverktøy.'],
-    ['Lagret på enheten', 'Favoritter, handlekurv og sist viste produkter lagres bare på denne enheten, i nettleserens lokale lagring. Ingenting sendes videre. Du kan slette alt under «Tøm lagrede data».'],
-    ['Tredjeparter', 'Produktdata hentes via en mellomtjener hos Cloudflare, som bare videresender offentlige produktdata fra fredrikoglouisa.no. Cloudflare ser teknisk sett IP-adressen din. Skrifttyper lastes fra Google Fonts, som også ser IP-adressen din.']
-  ],
-  'Vilkår og juridisk info': [
-    ['', 'Demoen er kun til visning. Handlekurven er lokal og brukes bare for å vise hvordan den kan fungere: ingen bestilling, ingen betaling og ingen kundedata.'],
-    ['Kjøp', '«Fullfør på fredrikoglouisa.no» sender deg til den ordinære nettbutikken. Der skjer kjøpet på butikkens egne vilkår.'],
-    ['Priser og lager', 'Priser, tilbud og lagerstatus hentes fra nettbutikken, men kan avvike fra det som gjelder der. Det som står på fredrikoglouisa.no er gjeldende.'],
-    ['Varemerker', 'Varemerker, produktnavn, bilder og tekster tilhører sine respektive eiere.']
-  ]
-};
-function openInfo(title) {
+function openInfo(i) {
+  const [title, secs] = t('legal')[i];
   openSheet(h('div', { class: 'sbody' },
     h('div', { class: 'shead' }, h('h2', {}, title), closeBtn()),
-    h('div', { class: 'legal' }, LEGAL[title].flatMap(([t, p]) => [t ? h('h3', {}, t) : null, h('p', {}, p)]))));
+    h('div', { class: 'legal' }, secs.flatMap(([hd, p]) => [hd ? h('h3', {}, hd) : null, h('p', {}, p)]))));
 }
 function clearData() {
-  if (!confirm('Tømme favoritter, handlekurv og lagrede data på denne enheten?')) return;
-  try { Object.keys(localStorage).filter((k) => k.startsWith('fl.')).forEach((k) => localStorage.removeItem(k)); } catch (e) { /* ignorer */ }
+  if (!confirm(t('clear_q'))) return;
+  try { Object.keys(localStorage).filter((k) => k.startsWith('fl.') && k !== 'fl.lang').forEach((k) => localStorage.removeItem(k)); } catch (e) { /* ignorer */ }
   favs = {}; cart = []; renderCartCount(); renderMer();
+}
+function setLang(l) {
+  if (l === LANG) return;
+  LANG = l; store.set('lang', l);
+  applyLang();
+}
+function applyLang() {
+  document.documentElement.lang = LANG === 'en' ? 'en' : 'nb';
+  $('#q').placeholder = t('search_ph');
+  $('#q').setAttribute('aria-label', t('search'));
+  $('#search button').setAttribute('aria-label', t('search'));
+  $('#cartBtn').setAttribute('aria-label', t('cart'));
+  $('#tabs').setAttribute('aria-label', t('categories'));
+  renderTabs(); renderFilters(); renderPills();
+  if (state.items.length) { $('#grid').replaceChildren(); addCards(state.items); }
+  if (state.tab === 'mer') renderMer();
 }
 function renderMer() {
   const list = Object.values(favs).filter((f) => f && f.img && f.shades);
+  if (merPage === 'fav' && !list.length) { merPage = null; skipPop++; history.back(); }
+  if (merPage === 'fav') {
+    $('#merBody').replaceChildren(
+      h('div', { class: 'fhead' },
+        h('button', { class: 'back', 'aria-label': t('back'), onclick: () => history.back() }, icon('M15 6l-6 6 6 6', 22, 1.5)),
+        h('h1', {}, t('favorites')), h('span', { class: 'ct' }, String(list.length))),
+      h('div', { class: 'grid' }, list.map(card)));
+    return;
+  }
   const row = (label, fn, cls) => h('button', { class: 'mrow' + (cls ? ' ' + cls : ''), onclick: fn }, h('span', {}, label), cls ? null : icon(CHEV, 18, 1.5));
+  const openFav = () => { history.pushState({ fav: 1 }, ''); merPage = 'fav'; renderMer(); $('#mer').scrollTop = 0; };
   $('#merBody').replaceChildren(
+    h('div', { class: 'mtitle' }, t('mer')),
     h('section', { class: 'msec' },
-      h('h2', {}, 'Favoritter', list.length ? h('span', { class: 'ct' }, String(list.length)) : null),
+      h('h2', {}, t('favorites')),
       list.length
-        ? h('div', { class: 'grid' }, list.map(card))
-        : h('div', { class: 'mempty' }, icon(HEART, 30, 1.2), h('p', {}, 'Ingen favoritter ennå'), h('p', { class: 'sub' }, 'Trykk på hjertet på et produkt for å lagre det her.'))),
+        ? h('div', { class: 'mlist' }, h('button', { class: 'mrow fav', onclick: openFav },
+          h('span', { class: 'fl' }, h('span', {}, t('favorites')), h('small', {}, t('fav_count', list.length))),
+          h('span', { class: 'thumbs' }, list.slice(0, 3).map((f) => h('img', { src: f.img, alt: '' }))),
+          icon(CHEV, 18, 1.5)))
+        : h('div', { class: 'mempty' }, icon(HEART, 30, 1.2), h('p', {}, t('fav_empty')), h('p', { class: 'sub' }, t('fav_empty_sub')))),
     h('section', { class: 'msec' },
-      h('h2', {}, 'Informasjon'),
-      h('div', { class: 'mlist' }, Object.keys(LEGAL).map((t) => row(t, () => openInfo(t))))),
+      h('h2', {}, t('language')),
+      h('div', { class: 'seg' }, h('button', { class: LANG === 'no' ? 'on' : '', onclick: () => setLang('no') }, 'Norsk'), h('button', { class: LANG === 'en' ? 'on' : '', onclick: () => setLang('en') }, 'English'))),
     h('section', { class: 'msec' },
-      h('h2', {}, 'Data'),
-      h('div', { class: 'mlist' }, row('Tøm lagrede data', clearData, 'danger'))),
-    h('p', { class: 'mfoot' }, h('b', {}, 'Fredrik & Louisa'), 'Uoffisiell demo · ' + VERSION));
+      h('h2', {}, t('info')),
+      h('div', { class: 'mlist' }, t('legal').map((x, i) => row(x[0], () => openInfo(i))))),
+    h('section', { class: 'msec' },
+      h('h2', {}, t('data')),
+      h('div', { class: 'mlist' }, row(t('clear'), clearData, 'danger'))),
+    h('p', { class: 'mfoot' }, h('b', {}, 'Fredrik & Louisa'), t('unofficial') + ' · ' + VERSION));
 }
 
 /* ---------- en-tête : recherche et filtres se cachent en descendant, reviennent en remontant ---------- */
@@ -556,7 +647,7 @@ function renderMer() {
     dist = e.touches[0].clientY - y0;
     if (dist > 0 && sc.scrollTop <= 0) {
       ptr.style.height = Math.min(dist / 2, 60) + 'px';
-      ptr.textContent = dist > 120 ? 'Slipp for å oppdatere' : 'Dra for å oppdatere';
+      ptr.textContent = dist > 120 ? t('ptr_go') : t('ptr');
     }
   }, { passive: true });
   sc.addEventListener('touchend', () => {
@@ -574,7 +665,7 @@ if ('IntersectionObserver' in window) {
 
 /* ---------- démarrage ---------- */
 (async function boot() {
-  renderTabs(); renderFilters(); renderPills(); renderCartCount();
+  applyLang(); renderCartCount();
   skeleton();
   try { await loadCats(); } catch (e) { showError(); return; }
   loadSubs();
