@@ -12,7 +12,7 @@ const TABS = [
   { key: 'hudpleie', label: 'Hudpleie', match: 'hudpleie', icon: 'M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z' },
   { key: 'parfyme', label: 'Parfyme', match: 'parfyme', icon: 'M10 3h4v3h-4z M8 6h8a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z' },
   { key: 'har', label: 'Hår', match: 'hår', icon: 'M4 6h16v5H4z M6 11v7 M9 11v7 M12 11v7 M15 11v7 M18 11v7' },
-  { key: 'herre', label: 'Herre', match: 'herre', icon: 'M12 10c-1.5-1.8-4-2-6-1C4 10 2.8 12 2.5 14.5c2-1.2 4-1.3 6-.5 1.5.6 2.5.2 3.5-.8 1 1 2 1.4 3.5.8 2-.8 4-.7 6 .5C21.2 12 20 10 18 9c-2-1-4.500-.8-6 1z' },
+  { key: 'herre', label: 'Herre', match: 'herre', icon: 'M12 9.6C11.3 8.9 10.3 8.7 9.4 8.8C7.6 9.1 6.7 10.9 5.4 11.7C4.5 12.3 3.4 12.7 2.6 12.3C2.2 12.1 1.6 11.6 1.4 10.8C1 11.7 1 12.9 2 13.9C3.6 15.5 7 15.6 9.5 14.6C10.5 14.2 11.4 13.8 12 13C12.6 13.8 13.5 14.2 14.5 14.6C17 15.6 20.4 15.5 22 13.9C23 12.9 23 11.7 22.6 10.8C22.4 11.6 21.8 12.1 21.4 12.3C20.6 12.7 19.5 12.3 18.6 11.7C17.3 10.9 16.4 9.1 14.6 8.8C13.7 8.7 12.7 8.9 12 9.6Z' },
   { key: 'mer', label: 'Mer', icon: 'M5 12a1.2 1.2 0 1 0 .01 0 M12 12a1.2 1.2 0 1 0 .01 0 M19 12a1.2 1.2 0 1 0 .01 0' }
 ];
 const VERSION = 'Demo 1.1';
@@ -627,13 +627,16 @@ function renderMer() {
 
 /* ---------- en-tête : recherche et filtres se cachent en descendant, reviennent en remontant ---------- */
 (function () {
+  /* le décalage suit le défilement : même vitesse en descendant (ça se cache) et en remontant (ça revient),
+     et un état partiel reste tel quel si on lâche */
   const sc = $('#scroller'), tools = $('#tools');
-  let last = 0;
+  let last = 0, off = 0;
   sc.addEventListener('scroll', () => {
-    const y = Math.max(0, sc.scrollTop), d = y - last;
-    if (y <= 2 || document.activeElement === $('#q')) { tools.classList.remove('hide'); last = y; }
-    else if (d > 6) { tools.classList.add('hide'); last = y; }
-    else if (d < -6) { tools.classList.remove('hide'); last = y; }
+    const y = Math.max(0, sc.scrollTop), full = tools.offsetHeight;
+    off = Math.min(full, Math.max(0, off + (y - last)));
+    last = y;
+    if (y <= 0 || document.activeElement === $('#q')) off = 0;
+    tools.style.transform = off ? 'translate3d(0,' + (-off) + 'px,0)' : '';
   }, { passive: true });
 })();
 
