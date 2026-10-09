@@ -42,7 +42,7 @@ const I18N = {
     filter: 'Filter', sort: 'Sorter', brands: 'Merker', price: 'Pris', price_from: 'Fra kr', price_to: 'Til kr', instock_only: 'Kun på lager', reset: 'Nullstill', show_results: 'Vis resultater',
     sort_new: 'Nyeste', sort_pop: 'Populære', sort_plow: 'Pris: lav til høy', sort_phigh: 'Pris: høy til lav', brand_search: 'Søk etter merke', filter_err: 'Kunne ikke hente filtre.',
     pop_title: 'Populære produkter', all_title: 'Alle produkter',
-    remove: 'Fjern', oos: 'Utsolgt', prev_img: 'Forrige bilde', next_img: 'Neste bilde', close: 'Lukk', add: 'Legg i handlekurv', see_site: 'Se på fredrikoglouisa.no', cart: 'Handlekurv', cart_empty: 'Handlekurven er tom.',
+    remove: 'Fjern', sugg_all: (q) => 'Se alle resultater for «' + q + '»', no_match: 'Ingen treff', oos: 'Utsolgt', prev_img: 'Forrige bilde', next_img: 'Neste bilde', close: 'Lukk', add: 'Legg i handlekurv', see_site: 'Se på fredrikoglouisa.no', cart: 'Handlekurv', cart_empty: 'Handlekurven er tom.',
     fewer: 'Færre', more: 'Flere', sum: 'Sum', cart_note: 'Demo: handlekurven lagres bare på denne enheten. Betalingen gjøres hos fredrikoglouisa.no.',
     checkout: 'Fullfør på fredrikoglouisa.no', ptr_go: 'Slipp for å oppdatere', ptr: 'Dra for å oppdatere', fav_save: 'Lagre i favoritter',
     mer: 'Mer', favorites: 'Favoritter', fav_count: (n) => n + (n === 1 ? ' produkt' : ' produkter'), fav_empty: 'Ingen favoritter ennå',
@@ -57,7 +57,7 @@ const I18N = {
       ['Personvern', [
         ['', 'Demoen har ingen brukerkonto, ingen sporing og ingen analyseverktøy.'],
         ['Lagret på enheten', 'Favoritter, handlekurv, språkvalg og sist viste produkter lagres bare på denne enheten, i nettleserens lokale lagring. Ingenting sendes videre. Du kan slette alt under «Tøm lagrede data».'],
-        ['Tredjeparter', 'Produktdata hentes via en mellomtjener hos Cloudflare, som bare videresender offentlige produktdata fra fredrikoglouisa.no. Cloudflare ser teknisk sett IP-adressen din. Skrifttyper lastes fra Google Fonts, som også ser IP-adressen din.']]],
+        ['Tredjeparter', 'Produktdata hentes via en mellomtjener hos Cloudflare, som bare videresender offentlige produktdata fra fredrikoglouisa.no. Cloudflare ser teknisk sett IP-adressen din. Det du skriver i søkefeltet sendes til søketjenesten Clerk.io, den samme som fredrikoglouisa.no bruker, som også ser IP-adressen din. Skrifttyper lastes fra Google Fonts, som også ser IP-adressen din.']]],
       ['Vilkår og juridisk info', [
         ['', 'Demoen er kun til visning. Handlekurven er lokal og brukes bare for å vise hvordan den kan fungere: ingen bestilling, ingen betaling og ingen kundedata.'],
         ['Kjøp', '«Fullfør på fredrikoglouisa.no» sender deg til den ordinære nettbutikken. Der skjer kjøpet på butikkens egne vilkår.'],
@@ -75,7 +75,7 @@ const I18N = {
     filter: 'Filter', sort: 'Sort', brands: 'Brands', price: 'Price', price_from: 'From kr', price_to: 'To kr', instock_only: 'In stock only', reset: 'Reset', show_results: 'Show results',
     sort_new: 'Newest', sort_pop: 'Most popular', sort_plow: 'Price: low to high', sort_phigh: 'Price: high to low', brand_search: 'Search brand', filter_err: "Couldn't load filters.",
     pop_title: 'Popular products', all_title: 'All products',
-    remove: 'Remove', oos: 'Out of stock', prev_img: 'Previous image', next_img: 'Next image', close: 'Close', add: 'Add to cart', see_site: 'View on fredrikoglouisa.no', cart: 'Cart', cart_empty: 'Your cart is empty.',
+    remove: 'Remove', sugg_all: (q) => 'See all results for “' + q + '”', no_match: 'No matches', oos: 'Out of stock', prev_img: 'Previous image', next_img: 'Next image', close: 'Close', add: 'Add to cart', see_site: 'View on fredrikoglouisa.no', cart: 'Cart', cart_empty: 'Your cart is empty.',
     fewer: 'Fewer', more: 'More', sum: 'Total', cart_note: 'Demo: the cart is only stored on this device. Payment is made at fredrikoglouisa.no.',
     checkout: 'Complete at fredrikoglouisa.no', ptr_go: 'Release to refresh', ptr: 'Pull to refresh', fav_save: 'Save to favorites',
     mer: 'More', favorites: 'Favorites', fav_count: (n) => n + (n === 1 ? ' product' : ' products'), fav_empty: 'No favorites yet',
@@ -90,7 +90,7 @@ const I18N = {
       ['Privacy', [
         ['', 'The demo has no user account, no tracking and no analytics tools.'],
         ['Stored on the device', 'Favorites, cart, language choice and recently viewed products are stored only on this device, in the browser\'s local storage. Nothing is sent on. You can delete everything under "Clear saved data".'],
-        ['Third parties', 'Product data is fetched through an intermediary server at Cloudflare, which only forwards public product data from fredrikoglouisa.no. Cloudflare technically sees your IP address. Fonts are loaded from Google Fonts, which also sees your IP address.']]],
+        ['Third parties', 'Product data is fetched through an intermediary server at Cloudflare, which only forwards public product data from fredrikoglouisa.no. Cloudflare technically sees your IP address. What you type in the search field is sent to the search service Clerk.io, the same one fredrikoglouisa.no uses, which also sees your IP address. Fonts are loaded from Google Fonts, which also sees your IP address.']]],
       ['Terms and legal information', [
         ['', 'The demo is for display only. The cart is local and only shows how it could work: no ordering, no payment and no customer data.'],
         ['Purchases', '"Complete at fredrikoglouisa.no" takes you to the regular online store. Purchases there are made under the store\'s own terms.'],
@@ -302,6 +302,37 @@ async function updPop(cat) {
   } catch (e) { if (tok === popTok) hide(); }
 }
 
+/* ---------- recherche : moteur Clerk.io du site (clé publique, la même que celle de leur page), repli sur la recherche de la boutique ---------- */
+const CLERK_KEY = 'xQJiE4lYQki6b5m86HdqAJu0fZOGGn9y';
+async function clerk(path, params) {
+  const u = new URL('https://api.clerk.io/v2' + path);
+  u.searchParams.set('key', CLERK_KEY);
+  for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v);
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), 8000);
+  try {
+    const r = await fetch(u, { signal: ctl.signal });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    if (d.status !== 'ok') throw new Error(String(d.status));
+    return d;
+  } finally { clearTimeout(timer); }
+}
+async function searchPage(q, page) {
+  try {
+    const r = await clerk('/search/search', { query: q, limit: PER_PAGE, offset: (page - 1) * PER_PAGE });
+    const ids = r.result || [];
+    const pages = Math.max(1, Math.ceil((r.count || 0) / PER_PAGE));
+    if (!ids.length) return { data: [], pages };
+    const { data } = await api('/products', { include: ids.join(','), per_page: ids.length, _fields: FIELDS });
+    const pos = new Map(ids.map((id, i) => [id, i]));
+    data.sort((a, b) => pos.get(a.id) - pos.get(b.id));
+    return { data, pages };
+  } catch (e) {
+    return api('/products', { search: q, per_page: PER_PAGE, page, _fields: FIELDS });
+  }
+}
+
 /* ---------- chargement ---------- */
 async function loadCats() {
   const cached = store.get('cats', null);
@@ -366,7 +397,7 @@ async function load(opts) {
     if (fsig()) key += '.' + fsig();
   }
   try {
-    const { data, pages } = await api('/products', params);
+    const { data, pages } = state.query ? await searchPage(state.query, state.page) : await api('/products', params);
     if (my !== state.token) return;
     const items = data.map(mapProduct).filter((p) => p.price > 0 && p.img);
     if (!append) { $('#grid').replaceChildren(); if (!fsig()) store.set(key, items); }
@@ -425,8 +456,49 @@ function clearSearch() {
   state.query = ''; $('#q').value = '';
   renderTabs(); renderPills(); load();
 }
+/* ---------- suggestions au fil de la frappe ---------- */
+let suggTok = 0, suggTimer = 0;
+const closeSugg = () => { suggTok++; clearTimeout(suggTimer); const b = $('#sugg'); b.hidden = true; b.replaceChildren(); };
+const submitSearch = () => { if ($('#search').requestSubmit) $('#search').requestSubmit(); else $('#search').dispatchEvent(new Event('submit', { cancelable: true })); };
+async function openFromSuggestion(it) {
+  closeSugg(); $('#q').blur();
+  try {
+    const { data } = await api('/products/' + it.id, { _fields: FIELDS });
+    openProduct(mapProduct(data));
+  } catch (e) { $('#q').value = text(it.name); submitSearch(); }
+}
+async function showSugg(v) {
+  const tok = ++suggTok;
+  try {
+    const r = await clerk('/search/predictive', { query: v, limit: 7, attributes: JSON.stringify(['id', 'name', 'brand', 'price', 'list_price', 'image']) });
+    if (tok !== suggTok || $('#q').value.trim() !== v) return;
+    const items = r.product_data || [];
+    const box = $('#sugg');
+    if (!items.length) box.replaceChildren(h('div', { class: 'snone' }, t('no_match')));
+    else box.replaceChildren(
+      ...items.map((it) => h('button', { class: 'srow', type: 'button', onclick: () => openFromSuggestion(it) },
+        it.image ? h('img', { src: it.image, alt: '', onerror: (e) => e.target.remove() }) : null,
+        h('span', { class: 'si' },
+          h('span', { class: 'sb' }, text(it.brand || '')),
+          h('span', { class: 'sn' }, text(it.name)),
+          h('span', { class: 'sp' }, kr(it.price), it.list_price > it.price ? h('s', {}, kr(it.list_price)) : null)))),
+      h('button', { class: 'srow all', type: 'button', onclick: () => { closeSugg(); submitSearch(); } },
+        h('span', {}, t('sugg_all', v)), icon(CHEV, 18, 1.5)));
+    box.hidden = false;
+  } catch (e) { if (tok === suggTok) closeSugg(); }
+}
+$('#q').addEventListener('input', () => {
+  clearTimeout(suggTimer);
+  const v = $('#q').value.trim();
+  if (v.length < 2) { closeSugg(); return; }
+  suggTimer = setTimeout(() => showSugg(v), 140);
+});
+document.addEventListener('pointerdown', (e) => { if (!$('#sugg').hidden && !e.target.closest('#sugg') && !e.target.closest('#search')) closeSugg(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSugg(); });
+
 $('#search').addEventListener('submit', (e) => {
   e.preventDefault();
+  closeSugg();
   const v = $('#q').value.trim();
   $('#q').blur();
   if (!v) { if (state.query) clearSearch(); return; }

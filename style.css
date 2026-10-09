@@ -245,3 +245,17 @@ nav button.on span{font-weight:600}
 /* champs des filtres : même arrondi léger que les cases */
 .prange input,.bsearch{border-radius:8px;border-color:#cdc9c2}
 .prange input:focus,.bsearch:focus{outline:none;border-color:var(--ink)}
+
+/* suggestions de recherche */
+.sugg{position:absolute;left:0;right:0;top:52px;z-index:5;background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line);box-shadow:0 14px 26px rgba(26,26,26,.14);max-height:calc(100dvh - var(--bh) - 52px - var(--navh,64px) - 16px);overflow-y:auto;overscroll-behavior:contain}
+.sugg[hidden]{display:none}
+.srow{display:flex;align-items:center;gap:12px;width:100%;padding:8px 16px;border:0;border-bottom:1px solid var(--line);background:#fff;text-align:left}
+.srow img{flex:none;width:44px;height:55px;object-fit:cover;background:var(--ph);mix-blend-mode:multiply}
+.srow .si{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.srow .sb{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.srow .sn{font-size:14px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.srow .sp{font-size:13px;font-weight:500}
+.srow .sp s{margin-left:6px;color:var(--mute);font-weight:400}
+.srow.all{justify-content:space-between;min-height:50px;font-size:14px;font-weight:500;border-bottom:0}
+.srow.all svg{stroke:var(--mute);flex:none}
+.sugg .snone{padding:20px 16px;color:var(--mute);font-size:14px}
