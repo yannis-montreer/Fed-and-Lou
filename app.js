@@ -159,6 +159,11 @@ async function api(path, params) {
   } finally { clearTimeout(timer); }
 }
 
+/* nuances de couleur : on retire le numéro en tête ("01 Rose") ou en fin ("Fair 01") */
+function cleanShade(n) {
+  const a = n.replace(/^\d{1,3}\s+(?!(?:ml|g|cl|l|kg|mg|stk)\b)(?=\S)/i, '').replace(/^(\S.*?)\s+\d{1,3}$/, '$1');
+  return a || n;
+}
 function mapProduct(p) {
   const pr = p.prices || {};
   const div = Math.pow(10, pr.currency_minor_unit == null ? 2 : pr.currency_minor_unit);
@@ -169,7 +174,8 @@ function mapProduct(p) {
   const used = new Set((p.variations || []).map((v) => v.attributes && v.attributes[0] && v.attributes[0].value));
   const terms = attr && attr.terms ? attr.terms.filter((t) => !used.size || used.has(t.slug)) : [];
   const rawShades = terms.map((t) => text(t.name));
-  const cleaned = rawShades.map((n) => n.replace(/^\d{1,3}\s+(?=\S)/, ''));
+  const isColorAttr = !!attr && /farge|nyanse|color|colour/i.test(attr.name || '');
+  const cleaned = rawShades.map((n) => (isColorAttr ? cleanShade(n) : n));
   const shades = cleaned.map((n, i) => (cleaned.filter((x) => x === n).length > 1 ? rawShades[i] : n));
   const slugs = terms.map((t) => t.slug);
   const imgs = (p.images || []);
@@ -805,7 +811,7 @@ function openCart() {
     if (!cart.length) { body.append(h('div', { class: 'void' }, t('cart_empty'))); return; }
     for (const l of cart) {
       const open = l.prod ? () => { afterClose = () => openCart(); openProduct(l.prod); } : null;
-      const txt = l.shade ? l.shade.replace(/^\d{1,3}\s+(?=\S)/, '') : '';
+      const txt = l.shade ? (l.isColor === false ? l.shade : cleanShade(l.shade)) : '';
       const numOnly = !!l.shade && /^[\d\s.,]+$/.test(l.shade);
       const col = l.isColor ? (l.col || swCache[l.img] || null) : null;
       const dot = col ? h('span', { class: 'sw', style: 'background:' + col }) : null;
