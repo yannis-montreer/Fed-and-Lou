@@ -1,7 +1,7 @@
 'use strict';
 /* Démo F&L : lit l'API Store WooCommerce publique de fredrikoglouisa.no à chaque ouverture.
    Si le navigateur bloque l'API (CORS), mettre ici l'URL du proxy (voir worker.js). */
-const API = 'https://fredrikoglouisa.no/wp-json/wc/store/v1';
+const API = 'https://lively-leaf-cd06.yannis-montreer.workers.dev';
 const SITE = 'https://fredrikoglouisa.no/';
 const NEW_TAG = 9764; // tag "Nyheter"
 const PER_PAGE = 24;
