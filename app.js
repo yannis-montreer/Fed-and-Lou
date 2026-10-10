@@ -16,7 +16,7 @@ const TABS = [
   { key: 'mer', label: 'Mer', icon: 'M5 12a1.2 1.2 0 1 0 .01 0 M12 12a1.2 1.2 0 1 0 .01 0 M19 12a1.2 1.2 0 1 0 .01 0' }
 ];
 const VERSION = 'Demo 1.1';
-const BUILD = 'b42';
+const BUILD = 'b43';
 const SORTS = { date: ['date', 'desc', 'sort_new'], popularity: ['popularity', 'desc', 'sort_pop'], price_asc: ['price', 'asc', 'sort_plow'], price_desc: ['price', 'desc', 'sort_phigh'] };
 const MERKE_ATTR = 4; // attribut « Merke » (marque) de la boutique
 const FILTERS = [['all', 'all'], ['new', 'f_new'], ['sale', 'f_sale']];
@@ -1347,15 +1347,15 @@ function openStorePicker() {
     near.textContent = t('st_locating');
     navigator.geolocation.getCurrentPosition((pos) => { userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude }; near.textContent = t('st_nearest'); draw(); }, () => { near.textContent = t('st_nearest'); }, { timeout: 10000 });
   };
-  openSheet(h('div', { class: 'sbody' }, sheetHead(t('st_pick')), h('div', { class: 'fsec' }, near, search, list)));
+  openSheet(h('div', { class: 'sbody pk' }, sheetHead(t('st_pick')), h('div', { class: 'pkctl' }, near, search), list));
   loadStores().then((l) => { stores = l; if (l.length) draw(); else list.replaceChildren(h('div', { class: 'fload' }, t('stk_unavail'))); });
 }
 function openStoreStock(p, shade) {
   const q = stockIdOf(p, shade);
   const list = h('div', { class: 'stlist' }, h('div', { class: 'fload' }, '…'));
   const sub = shade && p.shades.length > 1 ? (p.shadeLabel === 'nyanser' ? cleanShade(shade) : shade) : '';
-  openSheet(h('div', { class: 'sbody' }, sheetHead(t('stk_title')),
-    h('div', { class: 'fsec' }, h('div', { class: 'stkhead' }, h('b', {}, p.name), sub ? h('small', {}, sub) : null), list)));
+  openSheet(h('div', { class: 'sbody pk' }, sheetHead(t('stk_title')),
+    h('div', { class: 'pkctl' }, h('div', { class: 'stkhead' }, h('b', {}, p.name), sub ? h('small', {}, sub) : null)), list));
   Promise.all([loadStores(), loadStock(q.id, q.kind)]).then(([stores, data]) => {
     if (!data || !stores.length) { list.replaceChildren(h('div', { class: 'fload' }, t('stk_unavail'))); return; }
     const rows = stores.map((s) => { const e = stockOf(data, s); return { s, e, rank: !e ? 2 : (e.st === 'instock' ? 0 : (e.st === 'lowstock' ? 1 : 2)), d: userPos && s.lat ? distKm(userPos, s) : null }; });

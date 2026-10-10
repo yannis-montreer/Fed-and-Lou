@@ -329,7 +329,7 @@ body.coOpen .sheet{z-index:201}
 .stkwrap{padding-top:10px}
 .stk{display:block}
 .stkb{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:0 12px;border:1px solid var(--line2);background:#fff;font-size:14px;text-align:left}
-.stkb span{flex:1;min-width:0}
+.stkb span:not(.sd){flex:1;min-width:0}
 .stkb svg{flex:none;stroke:var(--mute)}
 .stkb.dim{color:var(--mute);border-color:var(--line)}
 .sd{flex:none;width:10px;height:10px;border-radius:50%;background:#bdb9b3}
@@ -360,3 +360,8 @@ body.coOpen .sheet{z-index:201}
 .costk .cl2{display:flex;align-items:center;gap:8px;min-width:0}
 .costk .cs2{flex:none;font-size:12.5px;color:var(--mute)}
 .costsum{display:block;margin-top:6px;color:var(--mute);font-size:12.5px;line-height:1.4}
+/* feuilles à liste : titre et recherche restent en haut, seule la liste défile */
+.sbody.pk{display:flex;flex-direction:column;overflow:hidden;padding-bottom:0}
+.sbody.pk .pkctl{flex:none;padding:0 16px 8px}
+.sbody.pk .pkctl .bsearch{margin-top:10px}
+.sbody.pk .stlist{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;margin-top:0;padding:0 16px calc(env(safe-area-inset-bottom) + 12px)}
