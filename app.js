@@ -16,7 +16,7 @@ const TABS = [
   { key: 'mer', label: 'Mer', icon: 'M5 12a1.2 1.2 0 1 0 .01 0 M12 12a1.2 1.2 0 1 0 .01 0 M19 12a1.2 1.2 0 1 0 .01 0' }
 ];
 const VERSION = 'Demo 1.1';
-const BUILD = 'b44';
+const BUILD = 'b45';
 const SORTS = { date: ['date', 'desc', 'sort_new'], popularity: ['popularity', 'desc', 'sort_pop'], price_asc: ['price', 'asc', 'sort_plow'], price_desc: ['price', 'desc', 'sort_phigh'] };
 const MERKE_ATTR = 4; // attribut « Merke » (marque) de la boutique
 const FILTERS = [['all', 'all'], ['new', 'f_new'], ['sale', 'f_sale']];
@@ -48,7 +48,7 @@ const I18N = {
     co_code_q: 'Klikk her om du har en rabattkode', co_gift_q: 'Klikk her om du har et gavekort', co_code_ph: 'Rabattkode', co_gift_ph: 'Gavekortnummer',
     co_apply: 'Bruk', co_bad: 'Ugyldig kode. Prøv DEMO10.', co_bad_gift: 'Ugyldig gavekort. Prøv GAVE100.', co_ok_code: 'Rabatt på 10 % er lagt til.', co_ok_gift: 'Gavekort på 100 kr er lagt til.',
     co_ship_note: 'Fraktleverandør velges i kassen. Forventet leveringstid er 1–4 dager etter at pakken er sendt fra vårt lager.',
-    co_to: 'Til kassen', co_share: 'Del handlekurv', co_copied: 'Kopiert',
+    co_to: 'Til kassen',
     co_address: 'Leveringsadresse', co_example: 'Eksempel (demo)', co_delivery: 'Levering', co_store: 'Hent i butikk', co_store_sub: 'Klar for henting innen 1–2 dager',
     co_std: 'Standard levering', co_std_sub: '1–4 dager · gratis over 1 000 kr', co_payment: 'Betaling', co_card: 'Betalingskort', co_summary: 'Oppsummering',
     co_pay: 'Betal', co_thanks: 'Takk for bestillingen!', co_order_no: 'Ordrenummer', co_continue: 'Fortsett å handle', co_done_note: 'Dette var en demo. Ingenting er bestilt eller belastet.', co_confirm_sub: 'En bekreftelse ville blitt sendt på e-post.',
@@ -95,7 +95,7 @@ const I18N = {
     co_code_q: 'Click here if you have a discount code', co_gift_q: 'Click here if you have a gift card', co_code_ph: 'Discount code', co_gift_ph: 'Gift card number',
     co_apply: 'Apply', co_bad: 'Invalid code. Try DEMO10.', co_bad_gift: 'Invalid gift card. Try GAVE100.', co_ok_code: '10 % discount added.', co_ok_gift: 'Gift card of 100 kr added.',
     co_ship_note: 'The carrier is chosen at checkout. Expected delivery time is 1–4 days after the parcel has been shipped from our warehouse.',
-    co_to: 'To checkout', co_share: 'Share cart', co_copied: 'Copied',
+    co_to: 'To checkout',
     co_address: 'Delivery address', co_example: 'Example (demo)', co_delivery: 'Delivery', co_store: 'Pick up in store', co_store_sub: 'Ready for pickup within 1–2 days',
     co_std: 'Standard delivery', co_std_sub: '1–4 days · free over 1,000 kr', co_payment: 'Payment', co_card: 'Payment card', co_summary: 'Summary',
     co_pay: 'Pay', co_thanks: 'Thank you for your order!', co_order_no: 'Order number', co_continue: 'Continue shopping', co_done_note: 'This was a demo. Nothing has been ordered or charged.', co_confirm_sub: 'A confirmation would have been sent by e-mail.',
@@ -1228,14 +1228,7 @@ function coStep1(body, foot) {
     coMsg ? h('div', { class: 'comsg' }, coMsg) : document.createDocumentFragment(),
     h('div', { class: 'conote' }, t('co_ship_note')));
   foot.replaceChildren(h('div', { class: 'actions col' },
-    h('button', { class: 'cta', onclick: () => { history.pushState({ co: 2 }, ''); coDepth = 2; coStep = 2; coRender(); } }, t('co_to')),
-    h('button', { class: 'ghost wide', type: 'button', onclick: (e) => shareCart(e.currentTarget) }, t('co_share'))));
-}
-async function shareCart(btn) {
-  const tt = coTotals();
-  const text = cart.map((l) => l.qty + ' × ' + l.brand + ' ' + l.name).join('\n') + '\n' + t('co_total') + ': ' + kr(tt.total);
-  if (navigator.share) { try { await navigator.share({ title: 'Fredrik & Louisa', text }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
-  try { await navigator.clipboard.writeText(text); const old = btn.textContent; btn.textContent = t('co_copied'); setTimeout(() => { btn.textContent = old; }, 1500); } catch (e) { /* ignorer */ }
+    h('button', { class: 'cta', onclick: () => { history.pushState({ co: 2 }, ''); coDepth = 2; coStep = 2; coRender(); } }, t('co_to'))));
 }
 function coOpt(on, title, sub, right, pick) {
   return h('button', { class: 'opt' + (on ? ' on' : ''), type: 'button', onclick: pick },
