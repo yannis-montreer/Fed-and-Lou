@@ -16,7 +16,7 @@ const TABS = [
   { key: 'mer', label: 'Mer', icon: 'M5 12a1.2 1.2 0 1 0 .01 0 M12 12a1.2 1.2 0 1 0 .01 0 M19 12a1.2 1.2 0 1 0 .01 0' }
 ];
 const VERSION = 'Demo 1.1';
-const BUILD = 'b45';
+const BUILD = 'b46';
 const SORTS = { date: ['date', 'desc', 'sort_new'], popularity: ['popularity', 'desc', 'sort_pop'], price_asc: ['price', 'asc', 'sort_plow'], price_desc: ['price', 'desc', 'sort_phigh'] };
 const MERKE_ATTR = 4; // attribut « Merke » (marque) de la boutique
 const FILTERS = [['all', 'all'], ['new', 'f_new'], ['sale', 'f_sale']];
@@ -49,6 +49,9 @@ const I18N = {
     co_apply: 'Bruk', co_bad: 'Ugyldig kode. Prøv DEMO10.', co_bad_gift: 'Ugyldig gavekort. Prøv GAVE100.', co_ok_code: 'Rabatt på 10 % er lagt til.', co_ok_gift: 'Gavekort på 100 kr er lagt til.',
     co_ship_note: 'Fraktleverandør velges i kassen. Forventet leveringstid er 1–4 dager etter at pakken er sendt fra vårt lager.',
     co_to: 'Til kassen',
+    co_addr_add: 'Legg til adresse', co_addr_edit: 'Rediger adresse', co_addr_save: 'Lagre adresse', co_addr_del: 'Slett adresse',
+    co_f_name: 'Fullt navn', co_f_street: 'Gateadresse', co_f_zip: 'Postnummer', co_f_city: 'Sted', co_f_phone: 'Telefon (valgfritt)', co_f_country: 'Land', co_f_norway: 'Norge',
+    co_addr_req: 'Fyll ut feltene som er markert.', co_addr_need: 'Legg til en leveringsadresse for hjemlevering.', co_addr_note: 'Adressen lagres bare på denne enheten.',
     co_address: 'Leveringsadresse', co_example: 'Eksempel (demo)', co_delivery: 'Levering', co_store: 'Hent i butikk', co_store_sub: 'Klar for henting innen 1–2 dager',
     co_std: 'Standard levering', co_std_sub: '1–4 dager · gratis over 1 000 kr', co_payment: 'Betaling', co_card: 'Betalingskort', co_summary: 'Oppsummering',
     co_pay: 'Betal', co_thanks: 'Takk for bestillingen!', co_order_no: 'Ordrenummer', co_continue: 'Fortsett å handle', co_done_note: 'Dette var en demo. Ingenting er bestilt eller belastet.', co_confirm_sub: 'En bekreftelse ville blitt sendt på e-post.',
@@ -96,6 +99,9 @@ const I18N = {
     co_apply: 'Apply', co_bad: 'Invalid code. Try DEMO10.', co_bad_gift: 'Invalid gift card. Try GAVE100.', co_ok_code: '10 % discount added.', co_ok_gift: 'Gift card of 100 kr added.',
     co_ship_note: 'The carrier is chosen at checkout. Expected delivery time is 1–4 days after the parcel has been shipped from our warehouse.',
     co_to: 'To checkout',
+    co_addr_add: 'Add address', co_addr_edit: 'Edit address', co_addr_save: 'Save address', co_addr_del: 'Remove address',
+    co_f_name: 'Full name', co_f_street: 'Street address', co_f_zip: 'Postcode', co_f_city: 'City', co_f_phone: 'Phone (optional)', co_f_country: 'Country', co_f_norway: 'Norway',
+    co_addr_req: 'Please fill in the highlighted fields.', co_addr_need: 'Add a delivery address for home delivery.', co_addr_note: 'The address is saved on this device only.',
     co_address: 'Delivery address', co_example: 'Example (demo)', co_delivery: 'Delivery', co_store: 'Pick up in store', co_store_sub: 'Ready for pickup within 1–2 days',
     co_std: 'Standard delivery', co_std_sub: '1–4 days · free over 1,000 kr', co_payment: 'Payment', co_card: 'Payment card', co_summary: 'Summary',
     co_pay: 'Pay', co_thanks: 'Thank you for your order!', co_order_no: 'Order number', co_continue: 'Continue shopping', co_done_note: 'This was a demo. Nothing has been ordered or charged.', co_confirm_sub: 'A confirmation would have been sent by e-mail.',
@@ -1113,6 +1119,7 @@ function openFilter() {
 /* ---------- caisse simulée (aucun paiement, aucune commande, aucune saisie de carte) ---------- */
 let coEl = null, coStep = 0, coDepth = 0, coDone = false, coOpenCode = false, coOpenGift = false, coMsg = '', coLast = 0, coDraft = { code: '', gift: '' };
 let coDemo = { pct: 0, gift: 0, ship: 'store', pay: 'vipps', order: null };
+let coAddr = false, coAddrErr = false, coAddrDraft = null, myAddr = store.get('addr', null);
 const cartSum = (lines) => (lines || cart).reduce((n, l) => n + l.price * l.qty, 0);
 function coTotals(lines) {
   const sub = cartSum(lines);
@@ -1133,10 +1140,10 @@ function shadeLine(l) {
 function openCheckout() {
   if (coEl) return;
   coDemo = { pct: 0, gift: 0, ship: 'store', pay: 'vipps', order: null };
-  coStep = 1; coDepth = 1; coDone = false; coOpenCode = false; coOpenGift = false; coMsg = ''; coLast = 0; coDraft = { code: '', gift: '' };
+  coAddr = false; coAddrErr = false; coStep = 1; coDepth = 1; coDone = false; coOpenCode = false; coOpenGift = false; coMsg = ''; coLast = 0; coDraft = { code: '', gift: '' };
   history.pushState({ co: 1 }, '');
   coEl = h('div', { class: 'co', role: 'dialog', 'aria-modal': 'true' },
-    h('div', { class: 'cohead' }, h('button', { class: 'cob', id: 'coBtn', type: 'button' }), h('h2', {}, t('co_title'))),
+    h('div', { class: 'cohead' }, h('button', { class: 'cob', id: 'coBtn', type: 'button' }), h('h2', { id: 'coEl_t' }, t('co_title'))),
     h('div', { class: 'costeps', id: 'coSteps' }),
     h('div', { class: 'cobody', id: 'coBody' }),
     h('div', { class: 'cofoot', id: 'coFoot' }));
@@ -1148,7 +1155,7 @@ function openCheckout() {
 function closeCheckout() {
   if (!coEl) return;
   const n = coDepth, done = coDone;
-  coDepth = 0; coEl.remove(); coEl = null; coStep = 0; document.body.classList.remove('coOpen');
+  coAddr = false; coDepth = 0; coEl.remove(); coEl = null; coStep = 0; document.body.classList.remove('coOpen');
   const reopen = !done && cart.length;
   if (n > 0) {
     skipPop++;
@@ -1157,6 +1164,7 @@ function closeCheckout() {
   } else if (reopen) setTimeout(openCart, 0);
 }
 function coPop() {
+  if (coAddr) { coAddr = false; coDepth = 2; coRender(); return; }
   if (coStep === 3) { coDepth = 1; closeCheckout(); return; }
   if (coStep === 2) { coStep = 1; coDepth = 1; coRender(); return; }
   coDepth = 0; coEl.remove(); coEl = null; coStep = 0; document.body.classList.remove('coOpen');
@@ -1168,13 +1176,18 @@ function coRender() {
   $('#coSteps').replaceChildren(...[1, 2, 3].map((n) => h('div', { class: 'cost' + (coStep === n ? ' on' : '') + (coStep > n ? ' ok' : '') },
     h('span', { class: 'cn' }, coStep > n ? icon(CHECK, 14, 2) : String(n)), h('span', { class: 'cl' }, steps[n - 1]))));
   const btn = $('#coBtn');
-  btn.setAttribute('aria-label', coStep === 2 ? t('back') : t('close'));
-  btn.onclick = coStep === 2 ? () => history.back() : () => closeCheckout();
-  btn.replaceChildren(coStep === 2 ? icon('M15 6l-6 6 6 6', 22, 1.5) : icon(CLOSE, 22, 1.5));
+  const back = coStep === 2 || coAddr;
+  btn.setAttribute('aria-label', back ? t('back') : t('close'));
+  btn.onclick = back ? () => history.back() : () => closeCheckout();
+  btn.replaceChildren(back ? icon('M15 6l-6 6 6 6', 22, 1.5) : icon(CLOSE, 22, 1.5));
+  $('#coEl_t').textContent = coAddr ? t('co_address') : t('co_title');
+  $('#coSteps').hidden = coAddr;
   const body = $('#coBody'), foot = $('#coFoot');
-  const keep = coLast === coStep ? body.scrollTop : 0;
-  coLast = coStep;
-  if (coStep === 1) coStep1(body, foot);
+  const view = coAddr ? 'a' : coStep;
+  const keep = coLast === view ? body.scrollTop : 0;
+  coLast = view;
+  if (coAddr) coAddrForm(body, foot);
+  else if (coStep === 1) coStep1(body, foot);
   else if (coStep === 2) coStep2(body, foot);
   else coStep3(body, foot);
   body.scrollTop = keep;
@@ -1228,18 +1241,61 @@ function coStep1(body, foot) {
     coMsg ? h('div', { class: 'comsg' }, coMsg) : document.createDocumentFragment(),
     h('div', { class: 'conote' }, t('co_ship_note')));
   foot.replaceChildren(h('div', { class: 'actions col' },
-    h('button', { class: 'cta', onclick: () => { history.pushState({ co: 2 }, ''); coDepth = 2; coStep = 2; coRender(); } }, t('co_to'))));
+    h('button', { class: 'cta', onclick: () => { coMsg = ''; history.pushState({ co: 2 }, ''); coDepth = 2; coStep = 2; coRender(); } }, t('co_to'))));
 }
 function coOpt(on, title, sub, right, pick) {
   return h('button', { class: 'opt' + (on ? ' on' : ''), type: 'button', onclick: pick },
     h('span', { class: 'rad' }), h('span', { class: 'ot' }, h('b', {}, title), sub ? h('small', {}, sub) : null), right ? h('span', { class: 'or' }, right) : null);
 }
+const PENCIL = 'M4 20h4L19 9l-4-4L4 16z M13 7l4 4';
+function coOpenAddr() {
+  coAddrDraft = { ...(myAddr || { name: '', street: '', zip: '', city: '', phone: '' }) };
+  coAddrErr = false;
+  history.pushState({ co: 'a' }, ''); coDepth = 3; coAddr = true; coRender();
+}
+function coAddrBlock() {
+  if (!myAddr) return h('button', { class: 'addaddr', type: 'button', onclick: coOpenAddr }, icon('M12 6v12 M6 12h12', 18, 1.5), t('co_addr_add'));
+  return h('div', { class: 'coaddr' },
+    h('div', { class: 'ac' }, h('b', {}, myAddr.name), h('span', {}, myAddr.street), h('span', {}, myAddr.zip + ' ' + myAddr.city), h('span', {}, t('co_f_norway')), myAddr.phone ? h('span', { class: 'mu' }, myAddr.phone) : null),
+    h('button', { class: 'pen', type: 'button', 'aria-label': t('co_addr_edit'), onclick: coOpenAddr }, icon(PENCIL, 20, 1.5)));
+}
+function coAddrForm(body, foot) {
+  const d = coAddrDraft, bad = (k) => coAddrErr && coAddrOk(d)[k] === false;
+  const field = (k, label, attrs) => h('label', { class: 'fld' + (bad(k) ? ' bad' : '') },
+    h('span', {}, label),
+    h('input', { type: 'text', value: d[k], oninput: (e) => { d[k] = e.target.value; e.target.parentNode.classList.remove('bad'); }, ...attrs }));
+  body.replaceChildren(
+    coBanner(),
+    h('div', { class: 'coform' },
+      field('name', t('co_f_name'), { autocomplete: 'name', autocapitalize: 'words' }),
+      field('street', t('co_f_street'), { autocomplete: 'address-line1', autocapitalize: 'words' }),
+      h('div', { class: 'two' },
+        field('zip', t('co_f_zip'), { autocomplete: 'postal-code', inputmode: 'numeric', maxlength: '4' }),
+        field('city', t('co_f_city'), { autocomplete: 'address-level2', autocapitalize: 'words' })),
+      h('label', { class: 'fld ro' }, h('span', {}, t('co_f_country')), h('input', { type: 'text', value: t('co_f_norway'), disabled: true })),
+      field('phone', t('co_f_phone'), { autocomplete: 'tel', inputmode: 'tel', type: 'tel' }),
+      coAddrErr ? h('div', { class: 'comsg' }, t('co_addr_req')) : null,
+      h('div', { class: 'conote' }, t('co_addr_note'))));
+  foot.replaceChildren(h('div', { class: 'actions col' },
+    h('button', { class: 'cta', onclick: coAddrSave }, t('co_addr_save')),
+    myAddr ? h('button', { class: 'ghost', onclick: () => { myAddr = null; store.set('addr', null); history.back(); } }, t('co_addr_del')) : null));
+}
+function coAddrOk(d) {
+  return { name: d.name.trim().length > 1, street: d.street.trim().length > 2, zip: /^\d{4}$/.test(d.zip.trim()), city: d.city.trim().length > 1 };
+}
+function coAddrSave() {
+  const d = coAddrDraft, ok = coAddrOk(d);
+  if (!(ok.name && ok.street && ok.zip && ok.city)) { coAddrErr = true; coRender(); return; }
+  myAddr = { name: d.name.trim(), street: d.street.trim(), zip: d.zip.trim(), city: d.city.trim(), phone: d.phone.trim() };
+  store.set('addr', myAddr);
+  coMsg = '';
+  history.back();
+}
 function coStep2(body, foot) {
   const tt = coTotals();
   body.replaceChildren(
     coBanner(),
-    h('div', { class: 'cosec' }, h('h3', {}, t('co_address')),
-      h('div', { class: 'coaddr' }, h('b', {}, 'Ola Nordmann'), h('span', {}, 'Eksempelveien 1'), h('span', {}, '0150 Oslo'), h('small', {}, t('co_example')))),
+    h('div', { class: 'cosec' }, h('h3', {}, t('co_address')), coAddrBlock()),
     h('div', { class: 'cosec' }, h('h3', {}, t('co_delivery')),
       coOpt(coDemo.ship === 'store', t('co_store'), myStore ? myStore.short : t('co_store_sub'), t('co_free'), () => { coDemo.ship = 'store'; coRender(); }),
       coOpt(coDemo.ship === 'std', t('co_std'), t('co_std_sub'), tt.sub - tt.disc >= 1000 ? t('co_free') : kr(59), () => { coDemo.ship = 'std'; coRender(); }),
@@ -1249,7 +1305,12 @@ function coStep2(body, foot) {
       coOpt(coDemo.pay === 'card', t('co_card'), '', '', () => { coDemo.pay = 'card'; coRender(); })),
     h('div', { class: 'cosec' }, h('h3', {}, t('co_summary')), coTotalsBox(tt, true)));
   foot.replaceChildren(h('div', { class: 'actions col' },
-    h('button', { class: 'cta', onclick: coPlace }, t('co_pay') + ' ' + kr(tt.total) + ' (demo)')));
+    coMsg ? h('div', { class: 'comsg tight' }, coMsg) : null,
+    h('button', { class: 'cta', onclick: coPay }, t('co_pay') + ' ' + kr(tt.total) + ' (demo)')));
+}
+function coPay() {
+  if (coDemo.ship === 'std' && !myAddr) { coMsg = t('co_addr_need'); coOpenAddr(); return; }
+  coPlace();
 }
 function coPlace() {
   const lines = cart.map((l) => ({ ...l }));
