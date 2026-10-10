@@ -16,7 +16,7 @@ const TABS = [
   { key: 'mer', label: 'Mer', icon: 'M5 12a1.2 1.2 0 1 0 .01 0 M12 12a1.2 1.2 0 1 0 .01 0 M19 12a1.2 1.2 0 1 0 .01 0' }
 ];
 const VERSION = 'Demo 1.1';
-const BUILD = 'b43';
+const BUILD = 'b44';
 const SORTS = { date: ['date', 'desc', 'sort_new'], popularity: ['popularity', 'desc', 'sort_pop'], price_asc: ['price', 'asc', 'sort_plow'], price_desc: ['price', 'desc', 'sort_phigh'] };
 const MERKE_ATTR = 4; // attribut « Merke » (marque) de la boutique
 const FILTERS = [['all', 'all'], ['new', 'f_new'], ['sale', 'f_sale']];
@@ -55,7 +55,7 @@ const I18N = {
         my_store: 'Min butikk', st_pick: 'Velg butikk', st_change: 'Endre', st_none: 'Ingen butikk valgt', st_none_sub: 'Velg en butikk for å se lagerstatus og hente varer.',
     st_search: 'Søk etter butikk', st_nearest: 'Nærmeste butikker', st_locating: 'Finner posisjon…', st_today: 'I dag', st_closed: 'Stengt',
     stk_ok: 'På lager', stk_low: 'Få på lager', stk_out: 'Utilgjengelig', stk_pick: 'Velg butikk for å se lagerstatus', stk_loading: 'Henter lagerstatus…',
-    stk_unavail: 'Lagerstatus utilgjengelig', stk_upd: 'oppdatert', stk_title: 'Tilgjengelighet i butikk',
+    stk_unavail: 'Lagerstatus utilgjengelig', stk_title: 'Tilgjengelighet i butikk',
     co_avail: (n, m) => n + ' av ' + m + ' varer er tilgjengelige i butikken.', co_pickup_warn: 'Noen varer er ikke tilgjengelige i valgt butikk (demo).',
     oos: 'Utsolgt', prev_img: 'Forrige bilde', next_img: 'Neste bilde', close: 'Lukk', add: 'Legg i handlekurv', see_site: 'Se på fredrikoglouisa.no', cart: 'Handlekurv', cart_empty: 'Handlekurven er tom.',
     fewer: 'Færre', more: 'Flere', sum: 'Sum', cart_note: 'Demo: handlekurven lagres bare på denne enheten. Betalingen gjøres hos fredrikoglouisa.no.',
@@ -102,7 +102,7 @@ const I18N = {
         my_store: 'My store', st_pick: 'Choose store', st_change: 'Change', st_none: 'No store selected', st_none_sub: 'Choose a store to see stock and pick up items.',
     st_search: 'Search store', st_nearest: 'Nearest stores', st_locating: 'Finding location…', st_today: 'Today', st_closed: 'Closed',
     stk_ok: 'In stock', stk_low: 'Low stock', stk_out: 'Unavailable', stk_pick: 'Choose a store to see stock', stk_loading: 'Checking stock…',
-    stk_unavail: 'Stock status unavailable', stk_upd: 'updated', stk_title: 'Availability in stores',
+    stk_unavail: 'Stock status unavailable', stk_title: 'Availability in stores',
     co_avail: (n, m) => n + ' of ' + m + ' items are available at the store.', co_pickup_warn: 'Some items are not available at the chosen store (demo).',
     oos: 'Out of stock', prev_img: 'Previous image', next_img: 'Next image', close: 'Close', add: 'Add to cart', see_site: 'View on fredrikoglouisa.no', cart: 'Cart', cart_empty: 'Your cart is empty.',
     fewer: 'Fewer', more: 'More', sum: 'Total', cart_note: 'Demo: the cart is only stored on this device. Payment is made at fredrikoglouisa.no.',
@@ -900,9 +900,8 @@ function openProduct(p, startShade) {
       if (my !== stkTok || !stk.isConnected) return;
       if (!data) { stk.replaceChildren(h('div', { class: 'stkb dim' }, stkDot('none'), h('span', {}, t('stk_unavail')))); return; }
       const e = stockOf(data, myStore);
-      const tm = e && /\d\d:\d\d/.test(e.at || '') ? ' · ' + t('stk_upd') + ' ' + e.at.match(/\d\d:\d\d/)[0] : '';
       stk.replaceChildren(h('button', { class: 'stkb', type: 'button', onclick: () => { afterClose = () => openProduct(p, shade); openStoreStock(p, shade); } },
-        stkDot(stkCls(e)), h('span', {}, h('b', {}, stkTxt(e)), ' · ' + myStore.short + tm), icon(CHEV, 16, 1.5)));
+        stkDot(stkCls(e)), h('span', {}, h('b', {}, stkTxt(e)), ' · ' + myStore.short), icon(CHEV, 16, 1.5)));
     });
   };
   storeListeners.push(() => { if (!stk.isConnected) return false; showStk(); });
@@ -1316,7 +1315,6 @@ const stockOf = (data, s) => { const e = data && data[String(s.n)]; return e ? {
 const stkCls = (e) => (!e ? 'out' : (e.st === 'instock' ? 'ok' : (e.st === 'lowstock' ? 'low' : 'out')));
 const stkTxt = (e) => t(!e ? 'stk_out' : (e.st === 'instock' ? 'stk_ok' : (e.st === 'lowstock' ? 'stk_low' : 'stk_out')));
 const stkDot = (cls) => h('span', { class: 'sd ' + cls });
-const stkWhen = (e) => (e && /\d\d:\d\d/.test(e.at || '') ? ' · ' + t('stk_upd') + ' ' + e.at.match(/\d\d:\d\d/)[0] : '');
 const DAYS = ['Søndag', 'Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lørdag'];
 function todayHours(s) {
   const d = DAYS[new Date().getDay()], l = (s.hours || []).find((x) => x.startsWith(d));
@@ -1363,7 +1361,7 @@ function openStoreStock(p, shade) {
     rows.sort((a, b) => mine(a) - mine(b) || a.rank - b.rank || (a.d || 0) - (b.d || 0) || a.s.short.localeCompare(b.s.short, 'nb'));
     list.replaceChildren(...rows.map(({ s, e, d }) => h('button', { class: 'strow' + (myStore && myStore.n === s.n ? ' sel' : ''), type: 'button', onclick: () => { setStore(s); closeSheet(); } },
       stkDot(stkCls(e)),
-      h('span', { class: 'si2' }, h('b', {}, s.short), h('small', {}, stkTxt(e) + stkWhen(e))),
+      h('span', { class: 'si2' }, h('b', {}, s.short), h('small', {}, stkTxt(e))),
       d != null ? h('span', { class: 'km' }, kmText(d)) : null,
       myStore && myStore.n === s.n ? icon(CHECK, 18, 1.8) : null)));
   });
